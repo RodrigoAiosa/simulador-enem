@@ -6,6 +6,7 @@ import plotly.graph_objects as go
 from pathlib import Path
 from datetime import datetime
 import io
+from registrar_acesso import registrar_acesso
 
 # ── Configuração da página ──────────────────────────────────────────────────
 st.set_page_config(
@@ -456,7 +457,7 @@ def iniciar_simulado():
     for area in st.session_state.areas_selecionadas:
         area_qs = [q for q in PERGUNTAS if q["area"] == area]
         random.shuffle(area_qs)
-        qs.extend(area_qs[:20])  # 20 por área
+        qs.extend(area_qs[:20])
     random.shuffle(qs)
     st.session_state.questoes_ativas = qs
     st.session_state.indice_atual = 0
@@ -516,7 +517,6 @@ def gerar_relatorio_excel():
     qs = st.session_state.questoes_ativas
     res = st.session_state.respostas
 
-    # ── Aba 1: Relatorio (detalhe por questão) ──
     dados_detalhe = []
     for i, q in enumerate(qs):
         resp_aluno_idx = res.get(i)
@@ -534,27 +534,23 @@ def gerar_relatorio_excel():
         })
     df_detalhe = pd.DataFrame(dados_detalhe)
 
-    # ── Aba 2: Resumo Geral (contagem Correto/Errado por área + total) ──
     df_resumo = df_detalhe.groupby('area')['status'].value_counts().unstack(fill_value=0)
     df_resumo['Total'] = df_resumo.sum(axis=1)
     df_resumo.loc['Total Geral'] = df_resumo.sum()
-    df_resumo = df_resumo[['Correto', 'Errado', 'Total']]  # ordem desejada
+    df_resumo = df_resumo[['Correto', 'Errado', 'Total']]
 
-    # ── Aba 3: Resumo Tempo ──
     df_tempo = pd.DataFrame([{
         "data_hora": data_hora,
         "tempo_total": tempo_formatado,
         "tempo_medio_pergunta": tempo_medio_formatado
     }])
 
-    # ── Gerar Excel com múltiplas abas ──
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         df_detalhe.to_excel(writer, sheet_name='Relatorio', index=False)
         df_resumo.to_excel(writer, sheet_name='Resumo Geral')
         df_tempo.to_excel(writer, sheet_name='Resumo Tempo', index=False)
 
-        # Opcional: melhorar formatação (auto-ajuste colunas, congelar cabeçalho, etc.)
         for sheet_name in writer.sheets:
             worksheet = writer.sheets[sheet_name]
             for col in worksheet.columns:
@@ -585,6 +581,7 @@ if st.session_state.tela == "nome":
     _, mid, _ = st.columns([1, 2, 1])
     with mid:
         if st.button("Avançar →", type="primary", use_container_width=True, disabled=not st.session_state.nome_aluno.strip()):
+            registrar_acesso(st.session_state.nome_aluno)  # ← NOVO: registra acesso no banco
             st.session_state.tela = "home"
             st.rerun()
 
@@ -592,7 +589,6 @@ if st.session_state.tela == "nome":
 # TELA: HOME
 # ══════════════════════════════════════════════════════════════════════════════
 elif st.session_state.tela == "home":
-    # ── Cabeçalho ──
     st.markdown("<div class='titulo-preparatorio'>Preparatório Oficial</div>", unsafe_allow_html=True)
     st.markdown("<div class='titulo-enem'>ENEM</div>", unsafe_allow_html=True)
     st.markdown("<div class='titulo-simulador'>Simulador</div>", unsafe_allow_html=True)
@@ -600,7 +596,6 @@ elif st.session_state.tela == "home":
         "<div class='subtitulo'>20 questões por área · Análise por competência · Shuffled</div>",
         unsafe_allow_html=True,
     )
-    # ── Seletor de áreas ──
     st.markdown("<div class='section-label'>Selecione as áreas do simulado</div>", unsafe_allow_html=True)
     col1, col2 = st.columns(2)
     for i, (area, cor) in enumerate(AREA_CORES.items()):
@@ -627,14 +622,12 @@ elif st.session_state.tela == "home":
                 </div>""",
                 unsafe_allow_html=True,
             )
-            # Botão simples com texto vazio renderizado como toggle
             if st.button(f"{'✓' if sel else '+'} {area}", key=f"area_{area}", use_container_width=True):
                 if sel and len(st.session_state.areas_selecionadas) > 1:
                     st.session_state.areas_selecionadas.remove(area)
                 elif not sel:
                     st.session_state.areas_selecionadas.append(area)
                 st.rerun()
-    # ── Total e botão iniciar ──
     total_qs = sum(min(20, sum(1 for q in PERGUNTAS if q["area"] == area)) for area in st.session_state.areas_selecionadas)
     st.markdown(f"<div class='total-label'>{total_qs} questões selecionadas</div>", unsafe_allow_html=True)
     _, mid, _ = st.columns([1, 2, 1])
@@ -642,7 +635,6 @@ elif st.session_state.tela == "home":
         if st.button("Iniciar Simulado →", type="primary", use_container_width=True):
             iniciar_simulado()
             st.rerun()
-    # ── Histórico ──
     if st.session_state.historico:
         st.markdown("<br>", unsafe_allow_html=True)
         st.markdown("<div class='section-label'>Histórico de simulados</div>", unsafe_allow_html=True)
@@ -666,13 +658,11 @@ elif st.session_state.tela == "quiz":
     q = qs[idx]
     total = len(qs)
     cor = AREA_CORES[q["area"]]
-    # ── Timer ──
     if st.session_state.tempo_inicio:
         tempo_atual = datetime.now()
         st.session_state.tempo_decorrido = (tempo_atual - st.session_state.tempo_inicio).total_seconds()
         minutos, segundos = divmod(int(st.session_state.tempo_decorrido), 60)
         st.markdown(f"<div class='timer'>Tempo decorrido: {minutos:02d}:{segundos:02d}</div>", unsafe_allow_html=True)
-    # ── Barra de progresso ──
     col_p, col_n = st.columns([6, 1])
     with col_p:
         st.progress((idx + 1) / total)
@@ -681,7 +671,6 @@ elif st.session_state.tela == "quiz":
             f"<div style='font-family:Inter,sans-serif;font-size:12px;color:#5a5048;text-align:right;padding-top:5px'>{idx+1}/{total}</div>",
             unsafe_allow_html=True,
         )
-    # ── Badges ──
     r, g, b = int(cor[1:3],16), int(cor[3:5],16), int(cor[5:7],16)
     st.markdown(
         f"<div style='margin-bottom:16px'>"
@@ -691,10 +680,8 @@ elif st.session_state.tela == "quiz":
         f"{q['competencia']}</span></div>",
         unsafe_allow_html=True,
     )
-    # ── Enunciado ──
     enunciado_html = q["enunciado"].replace("\n", "<br>")
     st.markdown(f"<div class='question-box'>{enunciado_html}</div>", unsafe_allow_html=True)
-    # ── Alternativas ──
     respondido = st.session_state.mostrar_explicacao
     resposta_dada = st.session_state.respostas.get(idx)
     for i, alt in enumerate(q["alternativas"]):
@@ -714,7 +701,6 @@ elif st.session_state.tela == "quiz":
             if st.button(f"{letra}) {alt}", key=f"alt_{idx}_{i}", use_container_width=True):
                 responder(i)
                 st.rerun()
-    # ── Explicação ──
     if respondido:
         st.markdown(
             f"<div class='explicacao-box'>"
@@ -729,7 +715,6 @@ elif st.session_state.tela == "quiz":
             if st.button(label, type="primary", use_container_width=True):
                 proxima_questao()
                 st.rerun()
-    # ── Opções ──
     with st.expander("⚙️ Opções"):
         if st.button("🏠 Voltar ao início"):
             st.session_state.tela = "home"
@@ -748,7 +733,6 @@ elif st.session_state.tela == "resultado":
     emoji = "🎯" if pct >= 70 else "📈" if pct >= 50 else "📚"
     msg = "Excelente desempenho!" if pct >= 70 else "Bom, continue praticando!" if pct >= 50 else "Precisa reforçar os estudos."
     r, g, b = int(cor_pct[1:3],16), int(cor_pct[3:5],16), int(cor_pct[5:7],16)
-    # ── Score ──
     st.markdown(f"<div class='section-label' style='margin-top:8px'>Resultado Final</div>", unsafe_allow_html=True)
     st.markdown(f"<div class='result-pct' style='color:{cor_pct};text-shadow:0 0 60px rgba({r},{g},{b},0.25)'>{pct}%</div>", unsafe_allow_html=True)
     st.markdown(f"<div class='result-sub'>{acertos} de {total} questões corretas</div>", unsafe_allow_html=True)
@@ -758,14 +742,13 @@ elif st.session_state.tela == "resultado":
         f"{emoji} {msg}</span></div>",
         unsafe_allow_html=True,
     )
-    # ── Cards por área ──
     dados_area = calcular_por_area()
     n = len(dados_area)
     cols = st.columns(n)
     for i, (area, d) in enumerate(dados_area.items()):
         cor = AREA_CORES[area]
         r2, g2, b2 = int(cor[1:3],16), int(cor[3:5],16), int(cor[5:7],16)
-        pct_barra = d["score"] / 10 # 0-1000 → 0-100%
+        pct_barra = d["score"] / 10
         with cols[i]:
             st.markdown(
                 f"""<div class='score-card' style='border:1px solid rgba({r2},{g2},{b2},0.2)'>
@@ -780,7 +763,6 @@ elif st.session_state.tela == "resultado":
                 unsafe_allow_html=True,
             )
     st.markdown("<br>", unsafe_allow_html=True)
-    # ── Gráficos ──
     col_bar, col_radar = st.columns(2)
     labels = [a.split()[0] for a in dados_area]
     scores = [d["score"] for d in dados_area.values()]
@@ -824,7 +806,6 @@ elif st.session_state.tela == "resultado":
             title=dict(text="Radar de competências (%)", font=dict(size=11, color="#5a5048"), x=0),
         )
         st.plotly_chart(fig_rad, use_container_width=True)
-    # ── Áreas fracas ──
     areas_fracas = [a for a, d in dados_area.items() if d["score"] < 600 and d["total"] > 0]
     if areas_fracas:
         st.markdown("<div class='section-label' style='margin-top:8px'>📌 Foque seus estudos</div>", unsafe_allow_html=True)
@@ -837,7 +818,6 @@ elif st.session_state.tela == "resultado":
                 f"</div>",
                 unsafe_allow_html=True,
             )
-    # ── Revisão de questões ──
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("<div class='section-label'>🔍 Revisão de questões</div>", unsafe_allow_html=True)
     for i, q in enumerate(qs):
@@ -858,7 +838,6 @@ elif st.session_state.tela == "resultado":
                 f"<div class='explicacao-box'><div class='explicacao-titulo'>💡 Explicação</div>{q['explicacao']}</div>",
                 unsafe_allow_html=True,
             )
-    # ── Relatório Excel ──
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("<div class='section-label'>📊 Relatório</div>", unsafe_allow_html=True)
     excel_data = gerar_relatorio_excel()
@@ -870,7 +849,6 @@ elif st.session_state.tela == "resultado":
         use_container_width=True,
         type="secondary"
     )
-    # ── Botões finais ──
     st.markdown("<br>", unsafe_allow_html=True)
     col1, col2 = st.columns(2)
     with col1:
