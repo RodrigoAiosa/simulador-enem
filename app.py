@@ -3,7 +3,6 @@ import json
 import random
 import pandas as pd
 import plotly.graph_objects as go
-import plotly.express as px
 from pathlib import Path
 
 # ── Configuração da página ──────────────────────────────────────────────────
@@ -14,117 +13,375 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# ── CSS personalizado ───────────────────────────────────────────────────────
+# ── CSS ─────────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap');
 
-    html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
+/* ── Reset & base ── */
+html, body, [class*="css"] {
+    background-color: #0a0a0f !important;
+    color: #e8e0d0;
+}
+.main { background-color: #0a0a0f !important; }
+.block-container {
+    padding-top: 3rem !important;
+    padding-bottom: 3rem !important;
+    max-width: 820px !important;
+}
 
-    .main { background-color: #0f1117; }
-    .block-container { padding-top: 2rem; padding-bottom: 2rem; max-width: 800px; }
+/* ── Fundo com grid sutil ── */
+.main::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+        repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(255,255,255,0.025) 40px, rgba(255,255,255,0.025) 41px),
+        repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(255,255,255,0.025) 40px, rgba(255,255,255,0.025) 41px);
+    pointer-events: none;
+    z-index: 0;
+}
 
-    /* Cards de área */
-    .area-card {
-        background: #1a1d2e;
-        border-radius: 12px;
-        padding: 16px 20px;
-        margin-bottom: 10px;
-        border-left: 4px solid;
-    }
+/* ── Gradiente de fundo ── */
+.main::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+        radial-gradient(ellipse 80% 50% at 15% 10%, rgba(26,10,46,0.9) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 85% 80%, rgba(10,26,26,0.8) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+}
 
-    /* Questão */
-    .question-box {
-        background: #1a1d2e;
-        border-radius: 12px;
-        padding: 24px;
-        margin-bottom: 16px;
-        font-size: 16px;
-        line-height: 1.8;
-        color: #e0d8cc;
-    }
+/* ── Ocultar elementos Streamlit ── */
+#MainMenu, footer, header, .stDeployButton { visibility: hidden; }
+[data-testid="stToolbar"] { display: none; }
 
-    /* Explicação */
-    .explicacao-box {
-        background: #0d2218;
-        border: 1px solid #1e6641;
-        border-radius: 10px;
-        padding: 16px 20px;
-        margin-top: 12px;
-        color: #7dd4a8;
-        font-size: 14px;
-        line-height: 1.7;
-    }
+/* ── Títulos ── */
+.titulo-preparatorio {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    letter-spacing: 6px;
+    color: #f97316;
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 16px;
+}
+.titulo-enem {
+    font-family: 'EB Garamond', serif;
+    font-size: clamp(56px, 10vw, 96px);
+    font-weight: 700;
+    color: #f0e8d8;
+    text-align: center;
+    line-height: 1;
+    text-shadow: 0 0 80px rgba(249,115,22,0.15);
+    margin: 0;
+}
+.titulo-simulador {
+    font-family: 'EB Garamond', serif;
+    font-size: clamp(28px, 5vw, 48px);
+    font-weight: 400;
+    font-style: italic;
+    color: #f97316;
+    text-align: center;
+    line-height: 1.2;
+    margin-bottom: 20px;
+}
+.subtitulo {
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    color: #6b6050;
+    text-align: center;
+    margin-bottom: 40px;
+    letter-spacing: 0.3px;
+}
 
-    /* Badge de área */
-    .badge {
-        display: inline-block;
-        padding: 3px 12px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 600;
-        margin-right: 6px;
-    }
+/* ── Label de seção ── */
+.section-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: #4a4038;
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 16px;
+}
 
-    /* Resultado */
-    .result-score {
-        text-align: center;
-        font-size: 80px;
-        font-weight: 700;
-        line-height: 1;
-        margin: 10px 0;
-    }
+/* ── Cards de área ── */
+.area-card {
+    background: rgba(255,255,255,0.03);
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-bottom: 12px;
+    border: 1px solid;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+}
+.area-card:hover { background: rgba(255,255,255,0.05); }
+.area-icon { font-size: 32px; flex-shrink: 0; }
+.area-name {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+.area-count {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    color: #3a3028;
+    margin-top: 2px;
+}
+.area-check {
+    margin-left: auto;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
 
-    /* Progresso */
-    .progress-label {
-        font-size: 13px;
-        color: #6b7280;
-        text-align: right;
-        margin-bottom: 4px;
-    }
+/* ── Total selecionado ── */
+.total-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    color: #4a4038;
+    text-align: center;
+    margin-bottom: 20px;
+}
 
-    /* Alternativa correta/errada */
-    .alt-correta {
-        background: #0d2218 !important;
-        border: 1px solid #22c55e !important;
-        color: #22c55e !important;
-    }
-    .alt-errada {
-        background: #2d0f0f !important;
-        border: 1px solid #ef4444 !important;
-        color: #ef4444 !important;
-    }
+/* ── Botão principal ── */
+.stButton > button {
+    font-family: 'Inter', sans-serif !important;
+    font-weight: 700 !important;
+    letter-spacing: 2px !important;
+    text-transform: uppercase !important;
+    border-radius: 14px !important;
+    transition: all 0.2s !important;
+    border: none !important;
+}
+.stButton > button[kind="primary"] {
+    background: #f97316 !important;
+    color: #0a0a0f !important;
+    box-shadow: 0 0 40px rgba(249,115,22,0.35) !important;
+    padding: 18px 64px !important;
+    font-size: 15px !important;
+}
+.stButton > button[kind="primary"]:hover {
+    transform: scale(1.03) !important;
+    box-shadow: 0 0 60px rgba(249,115,22,0.5) !important;
+}
+.stButton > button[kind="secondary"] {
+    background: transparent !important;
+    color: #f97316 !important;
+    border: 1px solid #f97316 !important;
+}
 
-    /* Ocultar menu do Streamlit */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
+/* ── Barra de progresso ── */
+.stProgress > div > div {
+    background: #1a1812 !important;
+    border-radius: 4px !important;
+    height: 4px !important;
+}
+.stProgress > div > div > div {
+    border-radius: 4px !important;
+}
 
-    /* Botões */
-    .stButton > button {
-        border-radius: 10px;
-        font-weight: 600;
-        transition: all 0.2s;
-    }
-    .stButton > button:hover { transform: translateY(-1px); }
+/* ── Badge ── */
+.badge {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-right: 6px;
+    font-family: 'Inter', sans-serif;
+}
 
-    /* Título principal */
-    h1 { font-size: 2.8rem !important; font-weight: 700 !important; }
+/* ── Caixa de questão ── */
+.question-box {
+    background: #0f0f18;
+    border: 1px solid #2a2228;
+    border-radius: 20px;
+    padding: 28px 32px;
+    margin-bottom: 20px;
+    font-family: 'EB Garamond', serif;
+    font-size: 17px;
+    line-height: 1.85;
+    color: #d8d0c0;
+}
+
+/* ── Alternativas ── */
+.alt-btn {
+    background: #0f0f18;
+    border: 1px solid #2a2228;
+    border-radius: 12px;
+    padding: 14px 20px;
+    margin-bottom: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: #b8b0a0;
+    line-height: 1.55;
+    cursor: pointer;
+    transition: all 0.15s;
+    width: 100%;
+    text-align: left;
+}
+.alt-btn:hover { background: rgba(255,255,255,0.04); border-color: #4a4248; }
+.alt-correta {
+    background: rgba(16,185,129,0.08) !important;
+    border-color: #10b981 !important;
+    color: #10b981 !important;
+}
+.alt-errada {
+    background: rgba(239,68,68,0.08) !important;
+    border-color: #ef4444 !important;
+    color: #ef4444 !important;
+}
+.alt-neutra { opacity: 0.4; }
+
+/* ── Explicação ── */
+.explicacao-box {
+    background: #0a1a0f;
+    border: 1px solid rgba(16,185,129,0.2);
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-top: 4px;
+    margin-bottom: 20px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    line-height: 1.75;
+    color: #7dd4a8;
+}
+.explicacao-titulo {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #10b981;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+/* ── Score resultado ── */
+.result-pct {
+    font-family: 'EB Garamond', serif;
+    font-size: 96px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1;
+}
+.result-sub {
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    color: #6a6058;
+    text-align: center;
+    margin-top: 8px;
+}
+.result-badge {
+    display: inline-block;
+    border-radius: 20px;
+    padding: 6px 20px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 12px;
+}
+
+/* ── Card de score por área ── */
+.score-card {
+    background: #0f0f18;
+    border-radius: 16px;
+    padding: 18px 20px;
+    text-align: center;
+    height: 100%;
+}
+.score-card-area {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 6px;
+}
+.score-card-value {
+    font-family: 'EB Garamond', serif;
+    font-size: 36px;
+    font-weight: 700;
+    margin: 4px 0;
+}
+.score-card-acertos {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    color: #4a4038;
+}
+
+/* ── Sugestão área fraca ── */
+.area-fraca {
+    background: #080d18;
+    border-left: 3px solid;
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+    font-family: 'Inter', sans-serif;
+}
+.area-fraca-nome {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+.area-fraca-desc {
+    font-size: 12px;
+    color: #3a4858;
+    line-height: 1.6;
+}
+
+/* ── Revisão expander ── */
+.st-expander {
+    background: #0f0f18 !important;
+    border: 1px solid #2a2228 !important;
+    border-radius: 12px !important;
+}
+
+/* ── Histórico ── */
+.hist-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    background: #0f0f18;
+    border-radius: 10px;
+    margin-bottom: 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: #8a8070;
+}
+
+/* ── Checkbox invisível ── */
+.stCheckbox { display: none !important; }
+
+/* ── Divider ── */
+hr { border-color: #1a1812 !important; }
 </style>
 """, unsafe_allow_html=True)
 
 # ── Constantes ──────────────────────────────────────────────────────────────
 AREA_CORES = {
-    "Linguagens": "#f97316",
-    "Ciências Humanas": "#8b5cf6",
+    "Linguagens":           "#f97316",
+    "Ciências Humanas":     "#8b5cf6",
     "Ciências da Natureza": "#10b981",
-    "Matemática": "#3b82f6",
+    "Matemática":           "#3b82f6",
 }
 AREA_ICONES = {
-    "Linguagens": "✍️",
-    "Ciências Humanas": "🏛️",
+    "Linguagens":           "✍️",
+    "Ciências Humanas":     "🏛️",
     "Ciências da Natureza": "🔬",
-    "Matemática": "📐",
+    "Matemática":           "📐",
 }
 LETRAS = ["A", "B", "C", "D", "E"]
 
@@ -137,16 +394,16 @@ def carregar_perguntas():
 
 PERGUNTAS = carregar_perguntas()
 
-# ── Inicialização de estado ─────────────────────────────────────────────────
+# ── Estado ──────────────────────────────────────────────────────────────────
 def init_state():
     defaults = {
-        "tela": "home",               # home | quiz | resultado
+        "tela": "home",
         "areas_selecionadas": list(AREA_CORES.keys()),
         "questoes_ativas": [],
         "indice_atual": 0,
-        "respostas": {},              # {indice: idx_escolhido}
+        "respostas": {},
         "mostrar_explicacao": False,
-        "historico": [],              # lista de resultados anteriores
+        "historico": [],
     }
     for k, v in defaults.items():
         if k not in st.session_state:
@@ -176,277 +433,326 @@ def proxima_questao():
         finalizar()
 
 def finalizar():
-    qs = st.session_state.questoes_ativas
-    respostas = st.session_state.respostas
-    acertos = sum(1 for i, q in enumerate(qs) if respostas.get(i) == q["correta"])
-    total = len(qs)
-    pct = round(acertos / total * 100) if total else 0
-
-    # Salva no histórico
-    st.session_state.historico.append({
-        "acertos": acertos,
-        "total": total,
-        "pct": pct,
-        "areas": list(st.session_state.areas_selecionadas),
-    })
+    qs  = st.session_state.questoes_ativas
+    res = st.session_state.respostas
+    acertos = sum(1 for i, q in enumerate(qs) if res.get(i) == q["correta"])
+    total   = len(qs)
+    pct     = round(acertos / total * 100) if total else 0
+    st.session_state.historico.append({"acertos": acertos, "total": total, "pct": pct})
     st.session_state.tela = "resultado"
 
 def calcular_por_area():
-    qs = st.session_state.questoes_ativas
-    respostas = st.session_state.respostas
+    qs  = st.session_state.questoes_ativas
+    res = st.session_state.respostas
     dados = {}
     for area in st.session_state.areas_selecionadas:
-        area_qs = [(i, q) for i, q in enumerate(qs) if q["area"] == area]
-        acertos = sum(1 for i, q in area_qs if respostas.get(i) == q["correta"])
-        total = len(area_qs)
-        score = round(acertos / total * 1000) if total else 0
+        area_qs  = [(i, q) for i, q in enumerate(qs) if q["area"] == area]
+        acertos  = sum(1 for i, q in area_qs if res.get(i) == q["correta"])
+        total    = len(area_qs)
+        score    = round(acertos / total * 1000) if total else 0
         dados[area] = {"acertos": acertos, "total": total, "score": score}
     return dados
 
 # ══════════════════════════════════════════════════════════════════════════════
-# TELA: HOME
+#  TELA: HOME
 # ══════════════════════════════════════════════════════════════════════════════
 if st.session_state.tela == "home":
-    st.markdown("## 🎓 Simulador ENEM")
-    st.markdown("**40 questões · 4 áreas · Análise por competência**")
-    st.divider()
 
-    st.markdown("#### Selecione as áreas")
-    cols = st.columns(2)
+    # ── Cabeçalho ──
+    st.markdown("<div class='titulo-preparatorio'>Preparatório Oficial</div>", unsafe_allow_html=True)
+    st.markdown("<div class='titulo-enem'>ENEM</div>", unsafe_allow_html=True)
+    st.markdown("<div class='titulo-simulador'>Simulador</div>", unsafe_allow_html=True)
+    st.markdown(
+        "<div class='subtitulo'>40 questões · 4 áreas · Análise por competência · Shuffled</div>",
+        unsafe_allow_html=True,
+    )
+
+    # ── Seletor de áreas ──
+    st.markdown("<div class='section-label'>Selecione as áreas do simulado</div>", unsafe_allow_html=True)
+
+    col1, col2 = st.columns(2)
+    cols_map = {0: col1, 1: col1, 2: col2, 3: col2}
+
     for i, (area, cor) in enumerate(AREA_CORES.items()):
-        with cols[i % 2]:
-            selecionado = area in st.session_state.areas_selecionadas
-            qtd = sum(1 for q in PERGUNTAS if q["area"] == area)
-            label = f"{AREA_ICONES[area]} {area}  •  {qtd} questões"
-            checked = st.checkbox(label, value=selecionado, key=f"cb_{area}")
-            if checked and area not in st.session_state.areas_selecionadas:
-                st.session_state.areas_selecionadas.append(area)
-            elif not checked and area in st.session_state.areas_selecionadas:
-                if len(st.session_state.areas_selecionadas) > 1:
+        sel   = area in st.session_state.areas_selecionadas
+        icone = AREA_ICONES[area]
+        qtd   = sum(1 for q in PERGUNTAS if q["area"] == area)
+        bg    = f"rgba({int(cor[1:3],16)},{int(cor[3:5],16)},{int(cor[5:7],16)},0.10)" if sel else "rgba(255,255,255,0.03)"
+        check_bg  = cor if sel else "transparent"
+        check_bd  = cor if sel else "#3a3228"
+        check_txt = "✓" if sel else ""
+        name_col  = cor if sel else "#6a6058"
+
+        target_col = col1 if i < 2 else col2
+        with target_col:
+            st.markdown(
+                f"""<div class='area-card' style='border-color:{cor if sel else "#2a2228"};background:{bg}'>
+                    <span class='area-icon'>{icone}</span>
+                    <div>
+                        <div class='area-name' style='color:{name_col}'>{area}</div>
+                        <div class='area-count'>{qtd} questões</div>
+                    </div>
+                    <div class='area-check' style='background:{check_bg};border:2px solid {check_bd};color:#0a0a0f;margin-left:auto'>{check_txt}</div>
+                </div>""",
+                unsafe_allow_html=True,
+            )
+            # Botão invisível sobreposto ao card
+            if st.button("toggle", key=f"area_{area}", help=area, use_container_width=True,
+                         label_visibility="collapsed"):
+                if sel and len(st.session_state.areas_selecionadas) > 1:
                     st.session_state.areas_selecionadas.remove(area)
+                elif not sel:
+                    st.session_state.areas_selecionadas.append(area)
+                st.rerun()
 
+    # ── Total e botão iniciar ──
     total_qs = sum(1 for q in PERGUNTAS if q["area"] in st.session_state.areas_selecionadas)
-    st.markdown(f"**{total_qs} questões selecionadas**")
-    st.divider()
+    st.markdown(f"<div class='total-label'>{total_qs} questões selecionadas</div>", unsafe_allow_html=True)
 
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        if st.button("🚀 Iniciar Simulado", use_container_width=True, type="primary"):
+    _, mid, _ = st.columns([1, 2, 1])
+    with mid:
+        if st.button("Iniciar Simulado →", type="primary", use_container_width=True):
             iniciar_simulado()
             st.rerun()
 
-    # Histórico
+    # ── Histórico ──
     if st.session_state.historico:
-        st.divider()
-        st.markdown("#### 📊 Histórico de simulados")
-        hist_df = pd.DataFrame(st.session_state.historico)
-        hist_df.index = [f"Simulado {i+1}" for i in range(len(hist_df))]
-        hist_df.columns = ["Acertos", "Total", "Percentual (%)", "Áreas"]
-        st.dataframe(hist_df[["Acertos", "Total", "Percentual (%)"]], use_container_width=True)
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("<div class='section-label'>Histórico de simulados</div>", unsafe_allow_html=True)
+        for i, h in enumerate(reversed(st.session_state.historico)):
+            cor_h = "#10b981" if h["pct"] >= 70 else "#f97316" if h["pct"] >= 50 else "#ef4444"
+            st.markdown(
+                f"<div class='hist-row'>"
+                f"<span>Simulado #{len(st.session_state.historico)-i}</span>"
+                f"<span>{h['acertos']}/{h['total']} acertos</span>"
+                f"<span style='color:{cor_h};font-weight:700'>{h['pct']}%</span>"
+                f"</div>",
+                unsafe_allow_html=True,
+            )
+
 
 # ══════════════════════════════════════════════════════════════════════════════
-# TELA: QUIZ
+#  TELA: QUIZ
 # ══════════════════════════════════════════════════════════════════════════════
 elif st.session_state.tela == "quiz":
-    qs = st.session_state.questoes_ativas
-    idx = st.session_state.indice_atual
-    q = qs[idx]
+    qs    = st.session_state.questoes_ativas
+    idx   = st.session_state.indice_atual
+    q     = qs[idx]
     total = len(qs)
+    cor   = AREA_CORES[q["area"]]
 
-    # Cabeçalho com progresso
-    col_prog, col_num = st.columns([5, 1])
-    with col_prog:
+    # ── Barra de progresso ──
+    col_p, col_n = st.columns([6, 1])
+    with col_p:
         st.progress((idx + 1) / total)
-    with col_num:
-        st.markdown(f"<div style='text-align:right;font-size:13px;color:#6b7280;padding-top:6px'>{idx+1}/{total}</div>", unsafe_allow_html=True)
+    with col_n:
+        st.markdown(
+            f"<div style='font-family:Inter,sans-serif;font-size:12px;color:#5a5048;text-align:right;padding-top:5px'>{idx+1}/{total}</div>",
+            unsafe_allow_html=True,
+        )
 
-    # Badges de área / competência
-    cor = AREA_CORES[q["area"]]
+    # ── Badges ──
+    r, g, b = int(cor[1:3],16), int(cor[3:5],16), int(cor[5:7],16)
     st.markdown(
-        f"<span class='badge' style='background:{cor}22;color:{cor};border:1px solid {cor}44'>"
+        f"<div style='margin-bottom:16px'>"
+        f"<span class='badge' style='background:rgba({r},{g},{b},0.13);color:{cor};border:1px solid rgba({r},{g},{b},0.3)'>"
         f"{AREA_ICONES[q['area']]} {q['area']}</span>"
-        f"<span class='badge' style='background:#ffffff10;color:#9ca3af;border:1px solid #2a2228'>"
-        f"{q['competencia']}</span>",
-        unsafe_allow_html=True,
-    )
-    st.markdown("")
-
-    # Enunciado
-    st.markdown(
-        f"<div class='question-box'>{q['enunciado'].replace(chr(10), '<br>')}</div>",
+        f"<span class='badge' style='background:rgba(255,255,255,0.05);color:#6a6058;border:1px solid #2a2228'>"
+        f"{q['competencia']}</span></div>",
         unsafe_allow_html=True,
     )
 
-    # Alternativas
-    respondido = st.session_state.mostrar_explicacao
+    # ── Enunciado ──
+    enunciado_html = q["enunciado"].replace("\n", "<br>")
+    st.markdown(f"<div class='question-box'>{enunciado_html}</div>", unsafe_allow_html=True)
+
+    # ── Alternativas ──
+    respondido   = st.session_state.mostrar_explicacao
     resposta_dada = st.session_state.respostas.get(idx)
 
     for i, alt in enumerate(q["alternativas"]):
         letra = LETRAS[i]
-        texto = f"**{letra})** {alt}"
-
         if respondido:
             if i == q["correta"]:
-                st.success(f"✅ {letra}) {alt}")
+                css = "alt-correta"
             elif i == resposta_dada and i != q["correta"]:
-                st.error(f"❌ {letra}) {alt}")
+                css = "alt-errada"
             else:
-                st.markdown(f"<div style='padding:10px 14px;border-radius:8px;background:#16181f;color:#6b7280;margin-bottom:6px'>{letra}) {alt}</div>", unsafe_allow_html=True)
+                css = "alt-neutra"
+            st.markdown(
+                f"<div class='alt-btn {css}'><strong>{letra})</strong> {alt}</div>",
+                unsafe_allow_html=True,
+            )
         else:
-            if st.button(f"{letra}) {alt}", key=f"alt_{idx}_{i}", use_container_width=True):
+            if st.button(f"{letra})  {alt}", key=f"alt_{idx}_{i}", use_container_width=True):
                 responder(i)
                 st.rerun()
 
-    # Explicação
+    # ── Explicação ──
     if respondido:
         st.markdown(
-            f"<div class='explicacao-box'>💡 <strong>Explicação:</strong><br>{q['explicacao']}</div>",
+            f"<div class='explicacao-box'>"
+            f"<div class='explicacao-titulo'>💡 Explicação</div>"
+            f"{q['explicacao']}"
+            f"</div>",
             unsafe_allow_html=True,
         )
-        st.markdown("")
-        col1, col2 = st.columns([3, 1])
-        with col2:
-            label_btn = "Próxima →" if idx < total - 1 else "Ver Resultado 🏆"
-            if st.button(label_btn, type="primary", use_container_width=True):
+        _, col_btn = st.columns([3, 1])
+        with col_btn:
+            label = "Próxima →" if idx < total - 1 else "Resultado 🏆"
+            if st.button(label, type="primary", use_container_width=True):
                 proxima_questao()
                 st.rerun()
 
-    # Botão de abandonar
+    # ── Opções ──
     with st.expander("⚙️ Opções"):
-        if st.button("🏠 Voltar ao início", use_container_width=True):
+        if st.button("🏠 Voltar ao início"):
             st.session_state.tela = "home"
             st.rerun()
 
+
 # ══════════════════════════════════════════════════════════════════════════════
-# TELA: RESULTADO
+#  TELA: RESULTADO
 # ══════════════════════════════════════════════════════════════════════════════
 elif st.session_state.tela == "resultado":
-    qs = st.session_state.questoes_ativas
+    qs       = st.session_state.questoes_ativas
     respostas = st.session_state.respostas
-    acertos = sum(1 for i, q in enumerate(qs) if respostas.get(i) == q["correta"])
-    total = len(qs)
-    pct = round(acertos / total * 100) if total else 0
+    acertos  = sum(1 for i, q in enumerate(qs) if respostas.get(i) == q["correta"])
+    total    = len(qs)
+    pct      = round(acertos / total * 100) if total else 0
 
-    # Score principal
-    cor_pct = "#10b981" if pct >= 70 else "#f97316" if pct >= 50 else "#ef4444"
-    emoji_res = "🎯" if pct >= 70 else "📈" if pct >= 50 else "📚"
-    msg_res = "Excelente desempenho!" if pct >= 70 else "Bom, continue praticando!" if pct >= 50 else "Precisa reforçar os estudos."
+    cor_pct  = "#10b981" if pct >= 70 else "#f97316" if pct >= 50 else "#ef4444"
+    emoji    = "🎯" if pct >= 70 else "📈" if pct >= 50 else "📚"
+    msg      = "Excelente desempenho!" if pct >= 70 else "Bom, continue praticando!" if pct >= 50 else "Precisa reforçar os estudos."
+    r, g, b  = int(cor_pct[1:3],16), int(cor_pct[3:5],16), int(cor_pct[5:7],16)
 
-    st.markdown(f"<div class='result-score' style='color:{cor_pct}'>{pct}%</div>", unsafe_allow_html=True)
-    st.markdown(f"<div style='text-align:center;color:#6b7280;margin-bottom:4px'>{acertos} de {total} questões corretas</div>", unsafe_allow_html=True)
-    st.markdown(f"<div style='text-align:center;font-size:18px;margin-bottom:20px'>{emoji_res} {msg_res}</div>", unsafe_allow_html=True)
-    st.divider()
+    # ── Score ──
+    st.markdown(f"<div class='section-label' style='margin-top:8px'>Resultado Final</div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='result-pct' style='color:{cor_pct};text-shadow:0 0 60px rgba({r},{g},{b},0.25)'>{pct}%</div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='result-sub'>{acertos} de {total} questões corretas</div>", unsafe_allow_html=True)
+    st.markdown(
+        f"<div style='text-align:center;margin-bottom:32px'>"
+        f"<span class='result-badge' style='background:rgba({r},{g},{b},0.12);color:{cor_pct};border:1px solid rgba({r},{g},{b},0.3)'>"
+        f"{emoji} {msg}</span></div>",
+        unsafe_allow_html=True,
+    )
 
-    # ── Cards por área ──────────────────────────────────────────────────────
+    # ── Cards por área ──
     dados_area = calcular_por_area()
-    st.markdown("#### 📊 Desempenho por área")
-
-    cols = st.columns(len(dados_area))
+    n = len(dados_area)
+    cols = st.columns(n)
     for i, (area, d) in enumerate(dados_area.items()):
+        cor = AREA_CORES[area]
+        r2, g2, b2 = int(cor[1:3],16), int(cor[3:5],16), int(cor[5:7],16)
+        pct_barra = d["score"] / 10  # 0-1000 → 0-100%
         with cols[i]:
-            cor = AREA_CORES[area]
-            icone = AREA_ICONES[area]
             st.markdown(
-                f"<div style='background:#1a1d2e;border-radius:12px;padding:14px;border-top:3px solid {cor};text-align:center'>"
-                f"<div style='font-size:22px'>{icone}</div>"
-                f"<div style='font-size:11px;color:#6b7280;margin-top:4px'>{area.split()[0]}</div>"
-                f"<div style='font-size:28px;font-weight:700;color:{cor};margin:4px 0'>{d['score']}</div>"
-                f"<div style='font-size:12px;color:#4b5563'>{d['acertos']}/{d['total']} acertos</div>"
-                f"</div>",
+                f"""<div class='score-card' style='border:1px solid rgba({r2},{g2},{b2},0.2)'>
+                    <div style='font-size:26px'>{AREA_ICONES[area]}</div>
+                    <div class='score-card-area' style='color:{cor}'>{area.split()[0]}</div>
+                    <div class='score-card-value' style='color:{cor}'>{d['score']}</div>
+                    <div style='height:3px;background:#1a1812;border-radius:2px;margin:6px 0'>
+                        <div style='height:100%;background:{cor};border-radius:2px;width:{pct_barra}%'></div>
+                    </div>
+                    <div class='score-card-acertos'>{d['acertos']}/{d['total']} acertos</div>
+                </div>""",
                 unsafe_allow_html=True,
             )
 
-    st.markdown("")
+    st.markdown("<br>", unsafe_allow_html=True)
 
-    # ── Gráfico de barras ───────────────────────────────────────────────────
+    # ── Gráficos ──
+    col_bar, col_radar = st.columns(2)
+
     labels = [a.split()[0] for a in dados_area]
     scores = [d["score"] for d in dados_area.values()]
-    cores = [AREA_CORES[a] for a in dados_area]
+    cores  = [AREA_CORES[a] for a in dados_area]
 
-    fig_bar = go.Figure(go.Bar(
-        x=labels, y=scores,
-        marker_color=cores,
-        text=scores, textposition="outside",
-        textfont=dict(size=13, color="white"),
-    ))
-    fig_bar.update_layout(
-        paper_bgcolor="#0f1117", plot_bgcolor="#0f1117",
-        font_color="white", height=280,
-        yaxis=dict(range=[0, 1100], showgrid=False, zeroline=False, showticklabels=False),
-        xaxis=dict(showgrid=False),
-        margin=dict(t=30, b=20, l=10, r=10),
-        title=dict(text="Score por área (0–1000)", font=dict(size=13, color="#9ca3af"), x=0),
-    )
-    st.plotly_chart(fig_bar, use_container_width=True)
+    with col_bar:
+        fig_bar = go.Figure(go.Bar(
+            x=labels, y=scores,
+            marker_color=cores,
+            text=scores, textposition="outside",
+            textfont=dict(size=12, color="#8a8070"),
+        ))
+        fig_bar.update_layout(
+            paper_bgcolor="#0f0f18", plot_bgcolor="#0f0f18",
+            font_color="#8a8070", height=240,
+            yaxis=dict(range=[0, 1150], showgrid=False, zeroline=False, showticklabels=False),
+            xaxis=dict(showgrid=False, tickfont=dict(size=10)),
+            margin=dict(t=36, b=10, l=10, r=10),
+            title=dict(text="Score por área (0–1000)", font=dict(size=11, color="#5a5048"), x=0),
+        )
+        st.plotly_chart(fig_bar, use_container_width=True)
 
-    # ── Radar ───────────────────────────────────────────────────────────────
-    areas_radar = list(dados_area.keys())
-    pcts_radar = [round(d["acertos"] / d["total"] * 100) if d["total"] else 0 for d in dados_area.values()]
+    with col_radar:
+        areas_r  = list(dados_area.keys())
+        pcts_r   = [round(d["acertos"]/d["total"]*100) if d["total"] else 0 for d in dados_area.values()]
+        labels_r = [a.split()[0] for a in areas_r]
+        fig_rad  = go.Figure(go.Scatterpolar(
+            r=pcts_r + [pcts_r[0]],
+            theta=labels_r + [labels_r[0]],
+            fill="toself",
+            fillcolor="rgba(249,115,22,0.12)",
+            line=dict(color="#f97316", width=2),
+        ))
+        fig_rad.update_layout(
+            paper_bgcolor="#0f0f18", plot_bgcolor="#0f0f18",
+            font_color="#8a8070", height=240,
+            polar=dict(
+                bgcolor="#0f0f18",
+                radialaxis=dict(visible=True, range=[0,100], showticklabels=False, gridcolor="#2a2228"),
+                angularaxis=dict(gridcolor="#2a2228", tickfont=dict(size=10)),
+            ),
+            margin=dict(t=36, b=10, l=20, r=20),
+            title=dict(text="Radar de competências (%)", font=dict(size=11, color="#5a5048"), x=0),
+        )
+        st.plotly_chart(fig_rad, use_container_width=True)
 
-    fig_radar = go.Figure(go.Scatterpolar(
-        r=pcts_radar + [pcts_radar[0]],
-        theta=[a.split()[0] for a in areas_radar] + [areas_radar[0].split()[0]],
-        fill="toself",
-        fillcolor="rgba(249,115,22,0.15)",
-        line=dict(color="#f97316", width=2),
-    ))
-    fig_radar.update_layout(
-        paper_bgcolor="#0f1117", plot_bgcolor="#0f1117",
-        font_color="white", height=320,
-        polar=dict(
-            bgcolor="#1a1d2e",
-            radialaxis=dict(visible=True, range=[0, 100], showticklabels=False, gridcolor="#2a2d3e"),
-            angularaxis=dict(gridcolor="#2a2d3e"),
-        ),
-        margin=dict(t=30, b=30, l=30, r=30),
-        title=dict(text="Radar de competências (%)", font=dict(size=13, color="#9ca3af"), x=0),
-    )
-    st.plotly_chart(fig_radar, use_container_width=True)
-
-    # ── Áreas fracas ────────────────────────────────────────────────────────
+    # ── Áreas fracas ──
     areas_fracas = [a for a, d in dados_area.items() if d["score"] < 600 and d["total"] > 0]
     if areas_fracas:
-        st.divider()
-        st.markdown("#### 📌 Foque seus estudos")
+        st.markdown("<div class='section-label' style='margin-top:8px'>📌 Foque seus estudos</div>", unsafe_allow_html=True)
         for area in areas_fracas:
             cor = AREA_CORES[area]
-            icone = AREA_ICONES[area]
             st.markdown(
-                f"<div style='background:#0d1422;border-left:3px solid {cor};border-radius:8px;padding:14px 18px;margin-bottom:8px'>"
-                f"<strong style='color:{cor}'>{icone} {area}</strong><br>"
-                f"<span style='color:#4b5563;font-size:13px'>Score abaixo de 600. Revise os fundamentos e resolva mais simulados nesta área.</span>"
+                f"<div class='area-fraca' style='border-color:{cor}'>"
+                f"<div class='area-fraca-nome' style='color:{cor}'>{AREA_ICONES[area]} {area}</div>"
+                f"<div class='area-fraca-desc'>Score abaixo de 600. Revise os fundamentos e pratique mais questões desta área.</div>"
                 f"</div>",
                 unsafe_allow_html=True,
             )
 
-    # ── Revisão de questões ─────────────────────────────────────────────────
-    st.divider()
-    st.markdown("#### 🔍 Revisão de questões")
+    # ── Revisão de questões ──
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("<div class='section-label'>🔍 Revisão de questões</div>", unsafe_allow_html=True)
     for i, q in enumerate(qs):
         acertou = respostas.get(i) == q["correta"]
         icone_q = "✅" if acertou else "❌"
-        cor_q = AREA_CORES[q["area"]]
-        with st.expander(f"{icone_q} Q{i+1} · {q['area']} — {q['competencia']}"):
-            st.markdown(f"**{q['enunciado']}**")
-            st.markdown("")
+        with st.expander(f"{icone_q}  Q{i+1} · {q['area']} — {q['competencia']}"):
+            st.markdown(f"<div style='font-family:EB Garamond,serif;font-size:16px;line-height:1.7;color:#d0c8b8;white-space:pre-line'>{q['enunciado']}</div>", unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
             for j, alt in enumerate(q["alternativas"]):
                 letra = LETRAS[j]
                 if j == q["correta"]:
-                    st.success(f"✅ {letra}) {alt}")
+                    st.markdown(f"<div class='alt-btn alt-correta'>✅ <strong>{letra})</strong> {alt}</div>", unsafe_allow_html=True)
                 elif j == respostas.get(i) and j != q["correta"]:
-                    st.error(f"❌ {letra}) {alt} ← sua resposta")
+                    st.markdown(f"<div class='alt-btn alt-errada'>❌ <strong>{letra})</strong> {alt} <em style='opacity:0.6'>← sua resposta</em></div>", unsafe_allow_html=True)
                 else:
-                    st.markdown(f"{letra}) {alt}")
-            st.markdown(f"<div class='explicacao-box'>💡 {q['explicacao']}</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div class='alt-btn alt-neutra'><strong>{letra})</strong> {alt}</div>", unsafe_allow_html=True)
+            st.markdown(
+                f"<div class='explicacao-box'><div class='explicacao-titulo'>💡 Explicação</div>{q['explicacao']}</div>",
+                unsafe_allow_html=True,
+            )
 
-    # ── Botões finais ───────────────────────────────────────────────────────
-    st.divider()
+    # ── Botões finais ──
+    st.markdown("<br>", unsafe_allow_html=True)
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("↺ Novo simulado", use_container_width=True):
+        if st.button("↺  Novo simulado", use_container_width=True, type="secondary"):
             iniciar_simulado()
             st.rerun()
     with col2:
-        if st.button("🏠 Início", use_container_width=True, type="primary"):
+        if st.button("🏠  Início", use_container_width=True, type="primary"):
             st.session_state.tela = "home"
             st.rerun()
