@@ -499,17 +499,31 @@ def calcular_por_area():
     return dados
 
 def gerar_relatorio_excel():
+    if 'tempo_inicio' not in st.session_state or st.session_state.tempo_inicio is None:
+        tempo_total_seg = 0
+    else:
+        tempo_fim = datetime.now()
+        tempo_total_seg = (tempo_fim - st.session_state.tempo_inicio).total_seconds()
+    
+    minutos, segundos = divmod(int(tempo_total_seg), 60)
+    horas, minutos = divmod(minutos, 60)
+    tempo_formatado = f"{horas:02d}:{minutos:02d}:{segundos:02d}"
+    tempo_medio_seg = tempo_total_seg / len(st.session_state.questoes_ativas) if st.session_state.questoes_ativas else 0
+    tempo_medio_formatado = f"{tempo_medio_seg:.1f} seg"
+
     data_hora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     nome = st.session_state.nome_aluno
     qs = st.session_state.questoes_ativas
     res = st.session_state.respostas
-    dados = []
+
+    # ── Aba 1: Relatorio (detalhe por questão) ──
+    dados_detalhe = []
     for i, q in enumerate(qs):
         resp_aluno_idx = res.get(i)
         resp_aluno = LETRAS[resp_aluno_idx] if resp_aluno_idx is not None else "Não respondida"
         resp_correta = LETRAS[q["correta"]]
         status = "Correto" if resp_aluno_idx == q["correta"] else "Errado"
-        dados.append({
+        dados_detalhe.append({
             "data_hora": data_hora,
             "nome": nome,
             "area": q["area"],
@@ -518,10 +532,43 @@ def gerar_relatorio_excel():
             "resposta_correta": resp_correta,
             "status": status
         })
-    df = pd.DataFrame(dados)
+    df_detalhe = pd.DataFrame(dados_detalhe)
+
+    # ── Aba 2: Resumo Geral (contagem Correto/Errado por área + total) ──
+    df_resumo = df_detalhe.groupby('area')['status'].value_counts().unstack(fill_value=0)
+    df_resumo['Total'] = df_resumo.sum(axis=1)
+    df_resumo.loc['Total Geral'] = df_resumo.sum()
+    df_resumo = df_resumo[['Correto', 'Errado', 'Total']]  # ordem desejada
+
+    # ── Aba 3: Resumo Tempo ──
+    df_tempo = pd.DataFrame([{
+        "data_hora": data_hora,
+        "tempo_total": tempo_formatado,
+        "tempo_medio_pergunta": tempo_medio_formatado
+    }])
+
+    # ── Gerar Excel com múltiplas abas ──
     output = io.BytesIO()
-    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        df.to_excel(writer, index=False, sheet_name='Relatorio')
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df_detalhe.to_excel(writer, sheet_name='Relatorio', index=False)
+        df_resumo.to_excel(writer, sheet_name='Resumo Geral')
+        df_tempo.to_excel(writer, sheet_name='Resumo Tempo', index=False)
+
+        # Opcional: melhorar formatação (auto-ajuste colunas, congelar cabeçalho, etc.)
+        for sheet_name in writer.sheets:
+            worksheet = writer.sheets[sheet_name]
+            for col in worksheet.columns:
+                max_length = 0
+                column = col[0].column_letter
+                for cell in col:
+                    try:
+                        if len(str(cell.value)) > max_length:
+                            max_length = len(str(cell.value))
+                    except:
+                        pass
+                adjusted_width = (max_length + 2)
+                worksheet.column_dimensions[column].width = adjusted_width
+
     return output.getvalue()
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -816,9 +863,9 @@ elif st.session_state.tela == "resultado":
     st.markdown("<div class='section-label'>📊 Relatório</div>", unsafe_allow_html=True)
     excel_data = gerar_relatorio_excel()
     st.download_button(
-        label="Baixar Relatório em Excel",
+        label="Baixar Relatório Completo em Excel",
         data=excel_data,
-        file_name=f"relatorio_enem_{st.session_state.nome_aluno}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
+        file_name=f"relatorio_enem_{st.session_state.nome_aluno or 'anonimo'}_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         use_container_width=True,
         type="secondary"
