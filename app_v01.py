@@ -114,7 +114,7 @@ else:
     for i, questao in enumerate(st.session_state.questoes_sorteadas):
 
         st.markdown(f"### Questão {i+1}")
-        st.write(questao["pergunta"])
+        st.write(questao["enunciado"])
 
         alternativa = st.radio(
             "Escolha uma alternativa:",
