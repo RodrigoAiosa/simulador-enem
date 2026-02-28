@@ -1,171 +1,202 @@
 import streamlit as st
 import json
 import random
-import plotly.express as px
 
 # ---------------------------------------------------
-# CONFIGURAÇÃO
+# CONFIGURAÇÃO DA PÁGINA
 # ---------------------------------------------------
-st.set_page_config(page_title="Simulado ENEM", page_icon="📘", layout="wide")
+st.set_page_config(
+    page_title="ENEM Simulador",
+    page_icon="📘",
+    layout="wide"
+)
 
 # ---------------------------------------------------
-# CARREGAR BANCO DE QUESTÕES
+# CSS PREMIUM
 # ---------------------------------------------------
-@st.cache_data
-def carregar_questoes():
-    with open("perguntas_400.json", "r", encoding="utf-8") as f:
-        return json.load(f)
+st.markdown("""
+<style>
 
-PERGUNTAS = carregar_questoes()
+html, body, [class*="css"]  {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #0b1120;
+}
 
-AREAS = list(set(q["area"] for q in PERGUNTAS))
+.main {
+    background-color: #0b1120;
+}
+
+header, footer, #MainMenu {
+    visibility: hidden;
+}
+
+/* Título principal */
+.titulo-enem {
+    text-align: center;
+    font-size: 70px;
+    font-weight: 800;
+    color: #f5f5f5;
+    letter-spacing: 3px;
+    margin-bottom: -20px;
+}
+
+.subtitulo {
+    text-align: center;
+    font-size: 32px;
+    color: #ff7a00;
+    font-style: italic;
+    margin-bottom: 20px;
+}
+
+.descricao {
+    text-align: center;
+    color: #aaa;
+    margin-bottom: 50px;
+}
+
+/* Cards */
+.card {
+    padding: 25px;
+    border-radius: 18px;
+    margin-bottom: 20px;
+    transition: 0.3s;
+    border: 2px solid;
+}
+
+.card:hover {
+    transform: scale(1.02);
+}
+
+/* Botão principal */
+.botao-principal button {
+    background-color: #ff7a00 !important;
+    color: white !important;
+    font-size: 18px !important;
+    border-radius: 12px !important;
+    padding: 12px 30px !important;
+    box-shadow: 0px 0px 20px rgba(255,122,0,0.6);
+}
+
+/* Centralizar botão */
+.center-button {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+}
+
+</style>
+""", unsafe_allow_html=True)
 
 # ---------------------------------------------------
 # SESSION STATE
 # ---------------------------------------------------
-if "tela" not in st.session_state:
-    st.session_state.tela = "inicio"
-
-if "questoes_ativas" not in st.session_state:
-    st.session_state.questoes_ativas = []
-
-if "indice_atual" not in st.session_state:
-    st.session_state.indice_atual = 0
-
-if "respostas" not in st.session_state:
-    st.session_state.respostas = {}
-
-if "areas_selecionadas" not in st.session_state:
-    st.session_state.areas_selecionadas = []
+if "areas" not in st.session_state:
+    st.session_state.areas = []
 
 # ---------------------------------------------------
-# FUNÇÃO INICIAR SIMULADO
+# HEADER
 # ---------------------------------------------------
-def iniciar_simulado():
-    questoes_final = []
+st.markdown('<div class="titulo-enem">ENEM</div>', unsafe_allow_html=True)
+st.markdown('<div class="subtitulo">Simulador</div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="descricao">40 questões · 4 áreas · Análise por competência · Shuffled</div>',
+    unsafe_allow_html=True
+)
 
-    for area in st.session_state.areas_selecionadas:
-        qs_area = [q for q in PERGUNTAS if q["area"] == area]
-        random.shuffle(qs_area)
-        questoes_final.extend(qs_area[:10])  # 10 por área
+st.markdown("### ")
+st.markdown("## SELECIONE AS ÁREAS DO SIMULADO")
 
-    random.shuffle(questoes_final)
-
-    st.session_state.questoes_ativas = questoes_final
-    st.session_state.indice_atual = 0
-    st.session_state.respostas = {}
-    st.session_state.tela = "quiz"
+col1, col2 = st.columns(2)
 
 # ---------------------------------------------------
-# TELA INICIAL
+# FUNÇÃO TOGGLE
 # ---------------------------------------------------
-if st.session_state.tela == "inicio":
-
-    st.title("📘 Simulado ENEM Inteligente")
-
-    st.subheader("Selecione as áreas desejadas:")
-
-    areas = st.multiselect(
-        "Áreas",
-        AREAS
-    )
-
-    if st.button("🚀 Iniciar Simulado"):
-
-        if len(areas) == 0:
-            st.warning("Selecione pelo menos uma área.")
-        else:
-            st.session_state.areas_selecionadas = areas
-            iniciar_simulado()
-
-# ---------------------------------------------------
-# TELA QUIZ
-# ---------------------------------------------------
-elif st.session_state.tela == "quiz":
-
-    questoes = st.session_state.questoes_ativas
-    indice = st.session_state.indice_atual
-
-    if indice < len(questoes):
-
-        q = questoes[indice]
-
-        st.subheader(f"Questão {indice+1} de {len(questoes)}")
-        st.markdown(f"**Área:** {q['area']} | **Dificuldade:** {q['dificuldade']}")
-        st.write(q["enunciado"])
-
-        resposta = st.radio(
-            "Escolha a alternativa:",
-            q["alternativas"],
-            key=f"q_{indice}"
-        )
-
-        col1, col2 = st.columns(2)
-
-        with col1:
-            if st.button("Próxima ➡️"):
-                st.session_state.respostas[indice] = q["alternativas"].index(resposta)
-                st.session_state.indice_atual += 1
-
-        with col2:
-            if st.button("Finalizar Simulado"):
-                st.session_state.respostas[indice] = q["alternativas"].index(resposta)
-                st.session_state.tela = "resultado"
-
+def toggle_area(area):
+    if area in st.session_state.areas:
+        st.session_state.areas.remove(area)
     else:
-        st.session_state.tela = "resultado"
+        st.session_state.areas.append(area)
 
 # ---------------------------------------------------
-# TELA RESULTADO
+# CARDS
 # ---------------------------------------------------
-elif st.session_state.tela == "resultado":
 
-    st.title("📊 Resultado Final")
-
-    questoes = st.session_state.questoes_ativas
-    respostas = st.session_state.respostas
-
-    total = len(questoes)
-    acertos = 0
-
-    resultado_area = {}
-
-    for i, q in enumerate(questoes):
-
-        if q["area"] not in resultado_area:
-            resultado_area[q["area"]] = {"acertos": 0, "total": 0}
-
-        resultado_area[q["area"]]["total"] += 1
-
-        if i in respostas and respostas[i] == q["correta"]:
-            acertos += 1
-            resultado_area[q["area"]]["acertos"] += 1
-
-    percentual = (acertos / total) * 100
-
-    st.metric("Total de Acertos", f"{acertos}/{total}")
-    st.metric("Percentual", f"{percentual:.1f}%")
-
-    # -------------------------------
-    # Gráfico por área
-    # -------------------------------
-    dados_grafico = []
-
-    for area, dados in resultado_area.items():
-        perc = (dados["acertos"] / dados["total"]) * 100
-        dados_grafico.append({
-            "Área": area,
-            "Percentual de Acertos": perc
-        })
-
-    fig = px.bar(
-        dados_grafico,
-        x="Área",
-        y="Percentual de Acertos",
-        title="Desempenho por Área"
+with col1:
+    st.markdown(
+        """
+        <div class="card" style="border-color:#ff7a00; background: rgba(255,122,0,0.05);">
+        <h3 style="color:#ff7a00;">✍️ Linguagens</h3>
+        <p style="color:#aaa;">10 questões</p>
+        </div>
+        """,
+        unsafe_allow_html=True
     )
+    st.button("✓ LINGUAGENS" if "Linguagens" in st.session_state.areas else "LINGUAGENS",
+              on_click=toggle_area,
+              args=("Linguagens",))
 
-    st.plotly_chart(fig, use_container_width=True)
+with col2:
+    st.markdown(
+        """
+        <div class="card" style="border-color:#00e0a4; background: rgba(0,224,164,0.05);">
+        <h3 style="color:#00e0a4;">🔬 Ciências da Natureza</h3>
+        <p style="color:#aaa;">10 questões</p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+    st.button("✓ CIÊNCIAS DA NATUREZA" if "Ciências da Natureza" in st.session_state.areas else "CIÊNCIAS DA NATUREZA",
+              on_click=toggle_area,
+              args=("Ciências da Natureza",))
 
-    if st.button("🔄 Novo Simulado"):
-        st.session_state.tela = "inicio"
+col3, col4 = st.columns(2)
+
+with col3:
+    st.markdown(
+        """
+        <div class="card" style="border-color:#a855f7; background: rgba(168,85,247,0.05);">
+        <h3 style="color:#a855f7;">🏛 Ciências Humanas</h3>
+        <p style="color:#aaa;">10 questões</p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+    st.button("✓ CIÊNCIAS HUMANAS" if "Ciências Humanas" in st.session_state.areas else "CIÊNCIAS HUMANAS",
+              on_click=toggle_area,
+              args=("Ciências Humanas",))
+
+with col4:
+    st.markdown(
+        """
+        <div class="card" style="border-color:#3b82f6; background: rgba(59,130,246,0.05);">
+        <h3 style="color:#3b82f6;">📐 Matemática</h3>
+        <p style="color:#aaa;">10 questões</p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+    st.button("✓ MATEMÁTICA" if "Matemática" in st.session_state.areas else "MATEMÁTICA",
+              on_click=toggle_area,
+              args=("Matemática",))
+
+# ---------------------------------------------------
+# CONTADOR
+# ---------------------------------------------------
+total = len(st.session_state.areas) * 10
+st.markdown(
+    f"<div style='text-align:center; color:#888; margin-top:20px;'>{total} questões selecionadas</div>",
+    unsafe_allow_html=True
+)
+
+# ---------------------------------------------------
+# BOTÃO INICIAR
+# ---------------------------------------------------
+st.markdown('<div class="center-button botao-principal">', unsafe_allow_html=True)
+
+if st.button("INICIAR SIMULADO →"):
+    if len(st.session_state.areas) == 0:
+        st.warning("Selecione pelo menos uma área.")
+    else:
+        st.success("Simulado iniciado! (Aqui você conecta com a tela do quiz)")
+
+st.markdown("</div>", unsafe_allow_html=True)
