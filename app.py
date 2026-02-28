@@ -672,4 +672,165 @@ elif st.session_state.tela == "quiz":
         st.markdown(
             f"<div class='explicacao-box'>"
             f"<div class='explicacao-titulo'>💡 Explicação</div>"
-            f"{
+            f"{q['explicacao']}"
+            f"</div>",
+            unsafe_allow_html=True,
+        )
+        _, col_btn = st.columns([3, 1])
+        with col_btn:
+            label = "Próxima →" if idx < total - 1 else "Resultado 🏆"
+            if st.button(label, type="primary", use_container_width=True):
+                proxima_questao()
+                st.rerun()
+    # ── Opções ──
+    with st.expander("⚙️ Opções"):
+        if st.button("🏠 Voltar ao início"):
+            st.session_state.tela = "home"
+            st.rerun()
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TELA: RESULTADO
+# ══════════════════════════════════════════════════════════════════════════════
+elif st.session_state.tela == "resultado":
+    qs = st.session_state.questoes_ativas
+    respostas = st.session_state.respostas
+    acertos = sum(1 for i, q in enumerate(qs) if respostas.get(i) == q["correta"])
+    total = len(qs)
+    pct = round(acertos / total * 100) if total else 0
+    cor_pct = "#10b981" if pct >= 70 else "#f97316" if pct >= 50 else "#ef4444"
+    emoji = "🎯" if pct >= 70 else "📈" if pct >= 50 else "📚"
+    msg = "Excelente desempenho!" if pct >= 70 else "Bom, continue praticando!" if pct >= 50 else "Precisa reforçar os estudos."
+    r, g, b = int(cor_pct[1:3],16), int(cor_pct[3:5],16), int(cor_pct[5:7],16)
+    # ── Score ──
+    st.markdown(f"<div class='section-label' style='margin-top:8px'>Resultado Final</div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='result-pct' style='color:{cor_pct};text-shadow:0 0 60px rgba({r},{g},{b},0.25)'>{pct}%</div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='result-sub'>{acertos} de {total} questões corretas</div>", unsafe_allow_html=True)
+    st.markdown(
+        f"<div style='text-align:center;margin-bottom:32px'>"
+        f"<span class='result-badge' style='background:rgba({r},{g},{b},0.12);color:{cor_pct};border:1px solid rgba({r},{g},{b},0.3)'>"
+        f"{emoji} {msg}</span></div>",
+        unsafe_allow_html=True,
+    )
+    # ── Cards por área ──
+    dados_area = calcular_por_area()
+    n = len(dados_area)
+    cols = st.columns(n)
+    for i, (area, d) in enumerate(dados_area.items()):
+        cor = AREA_CORES[area]
+        r2, g2, b2 = int(cor[1:3],16), int(cor[3:5],16), int(cor[5:7],16)
+        pct_barra = d["score"] / 10 # 0-1000 → 0-100%
+        with cols[i]:
+            st.markdown(
+                f"""<div class='score-card' style='border:1px solid rgba({r2},{g2},{b2},0.2)'>
+                    <div style='font-size:26px'>{AREA_ICONES[area]}</div>
+                    <div class='score-card-area' style='color:{cor}'>{area.split()[0]}</div>
+                    <div class='score-card-value' style='color:{cor}'>{d['score']}</div>
+                    <div style='height:3px;background:#1a1812;border-radius:2px;margin:6px 0'>
+                        <div style='height:100%;background:{cor};border-radius:2px;width:{pct_barra}%'></div>
+                    </div>
+                    <div class='score-card-acertos'>{d['acertos']}/{d['total']} acertos</div>
+                </div>""",
+                unsafe_allow_html=True,
+            )
+    st.markdown("<br>", unsafe_allow_html=True)
+    # ── Gráficos ──
+    col_bar, col_radar = st.columns(2)
+    labels = [a.split()[0] for a in dados_area]
+    scores = [d["score"] for d in dados_area.values()]
+    cores = [AREA_CORES[a] for a in dados_area]
+    with col_bar:
+        fig_bar = go.Figure(go.Bar(
+            x=labels, y=scores,
+            marker_color=cores,
+            text=scores, textposition="outside",
+            textfont=dict(size=12, color="#8a8070"),
+        ))
+        fig_bar.update_layout(
+            paper_bgcolor="#0f0f18", plot_bgcolor="#0f0f18",
+            font_color="#8a8070", height=240,
+            yaxis=dict(range=[0, 1150], showgrid=False, zeroline=False, showticklabels=False),
+            xaxis=dict(showgrid=False, tickfont=dict(size=10)),
+            margin=dict(t=36, b=10, l=10, r=10),
+            title=dict(text="Score por área (0–1000)", font=dict(size=11, color="#5a5048"), x=0),
+        )
+        st.plotly_chart(fig_bar, use_container_width=True)
+    with col_radar:
+        areas_r = list(dados_area.keys())
+        pcts_r = [round(d["acertos"]/d["total"]*100) if d["total"] else 0 for d in dados_area.values()]
+        labels_r = [a.split()[0] for a in areas_r]
+        fig_rad = go.Figure(go.Scatterpolar(
+            r=pcts_r + [pcts_r[0]],
+            theta=labels_r + [labels_r[0]],
+            fill="toself",
+            fillcolor="rgba(249,115,22,0.12)",
+            line=dict(color="#f97316", width=2),
+        ))
+        fig_rad.update_layout(
+            paper_bgcolor="#0f0f18", plot_bgcolor="#0f0f18",
+            font_color="#8a8070", height=240,
+            polar=dict(
+                bgcolor="#0f0f18",
+                radialaxis=dict(visible=True, range=[0,100], showticklabels=False, gridcolor="#2a2228"),
+                angularaxis=dict(gridcolor="#2a2228", tickfont=dict(size=10)),
+            ),
+            margin=dict(t=36, b=10, l=20, r=20),
+            title=dict(text="Radar de competências (%)", font=dict(size=11, color="#5a5048"), x=0),
+        )
+        st.plotly_chart(fig_rad, use_container_width=True)
+    # ── Áreas fracas ──
+    areas_fracas = [a for a, d in dados_area.items() if d["score"] < 600 and d["total"] > 0]
+    if areas_fracas:
+        st.markdown("<div class='section-label' style='margin-top:8px'>📌 Foque seus estudos</div>", unsafe_allow_html=True)
+        for area in areas_fracas:
+            cor = AREA_CORES[area]
+            st.markdown(
+                f"<div class='area-fraca' style='border-color:{cor}'>"
+                f"<div class='area-fraca-nome' style='color:{cor}'>{AREA_ICONES[area]} {area}</div>"
+                f"<div class='area-fraca-desc'>Score abaixo de 600. Revise os fundamentos e pratique mais questões desta área.</div>"
+                f"</div>",
+                unsafe_allow_html=True,
+            )
+    # ── Revisão de questões ──
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("<div class='section-label'>🔍 Revisão de questões</div>", unsafe_allow_html=True)
+    for i, q in enumerate(qs):
+        acertou = respostas.get(i) == q["correta"]
+        icone_q = "✅" if acertou else "❌"
+        with st.expander(f"{icone_q} Q{i+1} · {q['area']} — {q['competencia']}"):
+            st.markdown(f"<div style='font-family:EB Garamond,serif;font-size:16px;line-height:1.7;color:#d0c8b8;white-space:pre-line'>{q['enunciado']}</div>", unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
+            for j, alt in enumerate(q["alternativas"]):
+                letra = LETRAS[j]
+                if j == q["correta"]:
+                    st.markdown(f"<div class='alt-btn alt-correta'>✅ <strong>{letra})</strong> {alt}</div>", unsafe_allow_html=True)
+                elif j == respostas.get(i) and j != q["correta"]:
+                    st.markdown(f"<div class='alt-btn alt-errada'>❌ <strong>{letra})</strong> {alt} <em style='opacity:0.6'>← sua resposta</em></div>", unsafe_allow_html=True)
+                else:
+                    st.markdown(f"<div class='alt-btn alt-neutra'><strong>{letra})</strong> {alt}</div>", unsafe_allow_html=True)
+            st.markdown(
+                f"<div class='explicacao-box'><div class='explicacao-titulo'>💡 Explicação</div>{q['explicacao']}</div>",
+                unsafe_allow_html=True,
+            )
+    # ── Relatório Excel ──
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("<div class='section-label'>📊 Relatório</div>", unsafe_allow_html=True)
+    excel_data = gerar_relatorio_excel()
+    st.download_button(
+        label="Baixar Relatório em Excel",
+        data=excel_data,
+        file_name=f"relatorio_enem_{st.session_state.nome_aluno}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        use_container_width=True,
+        type="secondary"
+    )
+    # ── Botões finais ──
+    st.markdown("<br>", unsafe_allow_html=True)
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("↺ Novo simulado", use_container_width=True, type="secondary"):
+            iniciar_simulado()
+            st.rerun()
+    with col2:
+        if st.button("🏠 Início", use_container_width=True, type="primary"):
+            st.session_state.tela = "home"
+            st.rerun()
