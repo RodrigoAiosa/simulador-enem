@@ -362,8 +362,59 @@ html, body, [class*="css"] {
     color: #8a8070;
 }
 
-/* ── Checkbox invisível ── */
-.stCheckbox { display: none !important; }
+/* ── Botões toggle de área ── */
+[data-testid="stButton"] button {
+    font-size: 11px !important;
+    padding: 4px 10px !important;
+    height: auto !important;
+    margin-top: -4px !important;
+    margin-bottom: 8px !important;
+    opacity: 0.45 !important;
+    border-radius: 8px !important;
+    background: rgba(255,255,255,0.04) !important;
+    border: 1px solid #2a2228 !important;
+    color: #5a5048 !important;
+    letter-spacing: 0.5px !important;
+    text-transform: none !important;
+    font-weight: 400 !important;
+}
+
+/* ── Botão primário (Iniciar Simulado, Próxima, Resultado) ── */
+[data-testid="stButton"] button[kind="primary"],
+button[kind="primary"] {
+    background: #f97316 !important;
+    color: #0a0a0f !important;
+    box-shadow: 0 0 40px rgba(249,115,22,0.35) !important;
+    font-size: 15px !important;
+    padding: 14px 32px !important;
+    font-weight: 700 !important;
+    letter-spacing: 2px !important;
+    text-transform: uppercase !important;
+    opacity: 1 !important;
+    border: none !important;
+    border-radius: 14px !important;
+    margin-top: 0 !important;
+}
+[data-testid="stButton"] button[kind="primary"]:hover {
+    transform: scale(1.03) !important;
+    box-shadow: 0 0 60px rgba(249,115,22,0.5) !important;
+    opacity: 1 !important;
+}
+
+/* ── Botão secundário ── */
+[data-testid="stButton"] button[kind="secondary"] {
+    background: transparent !important;
+    color: #f97316 !important;
+    border: 1px solid #f97316 !important;
+    opacity: 1 !important;
+    font-size: 13px !important;
+    padding: 10px 20px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    font-weight: 600 !important;
+    border-radius: 12px !important;
+    margin-top: 0 !important;
+}
 
 /* ── Divider ── */
 hr { border-color: #1a1812 !important; }
@@ -471,22 +522,23 @@ if st.session_state.tela == "home":
     st.markdown("<div class='section-label'>Selecione as áreas do simulado</div>", unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
-    cols_map = {0: col1, 1: col1, 2: col2, 3: col2}
 
     for i, (area, cor) in enumerate(AREA_CORES.items()):
-        sel   = area in st.session_state.areas_selecionadas
-        icone = AREA_ICONES[area]
-        qtd   = sum(1 for q in PERGUNTAS if q["area"] == area)
-        bg    = f"rgba({int(cor[1:3],16)},{int(cor[3:5],16)},{int(cor[5:7],16)},0.10)" if sel else "rgba(255,255,255,0.03)"
+        sel      = area in st.session_state.areas_selecionadas
+        icone    = AREA_ICONES[area]
+        qtd      = sum(1 for q in PERGUNTAS if q["area"] == area)
+        r2,g2,b2 = int(cor[1:3],16), int(cor[3:5],16), int(cor[5:7],16)
+        bg        = f"rgba({r2},{g2},{b2},0.10)" if sel else "rgba(255,255,255,0.03)"
         check_bg  = cor if sel else "transparent"
         check_bd  = cor if sel else "#3a3228"
         check_txt = "✓" if sel else ""
         name_col  = cor if sel else "#6a6058"
+        border    = cor if sel else "#2a2228"
 
         target_col = col1 if i < 2 else col2
         with target_col:
             st.markdown(
-                f"""<div class='area-card' style='border-color:{cor if sel else "#2a2228"};background:{bg}'>
+                f"""<div class='area-card' style='border-color:{border};background:{bg}'>
                     <span class='area-icon'>{icone}</span>
                     <div>
                         <div class='area-name' style='color:{name_col}'>{area}</div>
@@ -496,9 +548,8 @@ if st.session_state.tela == "home":
                 </div>""",
                 unsafe_allow_html=True,
             )
-            # Botão invisível sobreposto ao card
-            if st.button("toggle", key=f"area_{area}", help=area, use_container_width=True,
-                         label_visibility="collapsed"):
+            # Botão simples com texto vazio renderizado como toggle
+            if st.button(f"{'✓' if sel else '+'} {area}", key=f"area_{area}", use_container_width=True):
                 if sel and len(st.session_state.areas_selecionadas) > 1:
                     st.session_state.areas_selecionadas.remove(area)
                 elif not sel:
