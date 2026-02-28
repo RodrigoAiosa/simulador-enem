@@ -1,155 +1,219 @@
 import streamlit as st
-import json
-import random
 
-# ---------------------------------------------------
-# CONFIG
-# ---------------------------------------------------
-st.set_page_config(page_title="ENEM Simulador", layout="wide")
+st.set_page_config(layout="wide")
 
-# ---------------------------------------------------
-# CARREGAR QUESTÕES
-# ---------------------------------------------------
-@st.cache_data
-def carregar_questoes():
-    with open("perguntas_400.json", "r", encoding="utf-8") as f:
-        return json.load(f)
+# -------------------------
+# CSS PREMIUM OFICIAL
+# -------------------------
+st.markdown("""
+<style>
 
-PERGUNTAS = carregar_questoes()
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Poppins:wght@300;400;600&display=swap');
 
-# ---------------------------------------------------
-# SESSION STATE
-# ---------------------------------------------------
-if "areas" not in st.session_state:
-    st.session_state.areas = []
+html, body, [class*="css"] {
+    background-color: #0a0f1c;
+    font-family: 'Poppins', sans-serif;
+}
 
-if "tela" not in st.session_state:
-    st.session_state.tela = "inicio"
+header, footer, #MainMenu {
+    visibility: hidden;
+}
 
-if "questoes" not in st.session_state:
-    st.session_state.questoes = []
+/* Container central */
+.block-container {
+    padding-top: 3rem;
+    max-width: 1100px;
+}
 
-if "indice" not in st.session_state:
-    st.session_state.indice = 0
+/* Topo pequeno */
+.topo {
+    text-align:center;
+    letter-spacing: 6px;
+    font-size: 12px;
+    color: #ff7a00;
+    margin-bottom: 20px;
+}
 
-if "respostas" not in st.session_state:
-    st.session_state.respostas = {}
+/* ENEM */
+.titulo-enem {
+    text-align:center;
+    font-family: 'Playfair Display', serif;
+    font-size: 90px;
+    font-weight: 800;
+    color: #f3efe7;
+    margin-bottom: -25px;
+}
 
-# ---------------------------------------------------
-# FUNÇÃO INICIAR SIMULADO
-# ---------------------------------------------------
-def iniciar_simulado():
+/* Simulador */
+.subtitulo {
+    text-align:center;
+    font-size: 42px;
+    color: #ff7a00;
+    font-style: italic;
+    margin-bottom: 25px;
+}
 
-    questoes_final = []
+/* descrição */
+.descricao {
+    text-align:center;
+    color: #7f8794;
+    font-size: 14px;
+    letter-spacing: 1px;
+    margin-bottom: 50px;
+}
 
-    for area in st.session_state.areas:
-        qs_area = [q for q in PERGUNTAS if q["area"] == area]
-        random.shuffle(qs_area)
-        questoes_final.extend(qs_area[:10])
+/* seção */
+.secao {
+    text-align:center;
+    color:#7f8794;
+    letter-spacing:3px;
+    font-size:13px;
+    margin-bottom:30px;
+}
 
-    random.shuffle(questoes_final)
+/* Cards */
+.card {
+    padding: 28px;
+    border-radius: 20px;
+    border: 1.5px solid;
+    margin-bottom: 18px;
+    transition: 0.3s ease;
+}
 
-    st.session_state.questoes = questoes_final
-    st.session_state.indice = 0
-    st.session_state.respostas = {}
-    st.session_state.tela = "quiz"
+.card:hover {
+    transform: scale(1.02);
+}
 
-# ---------------------------------------------------
-# TELA INICIAL
-# ---------------------------------------------------
-if st.session_state.tela == "inicio":
+.laranja {
+    border-color:#ff7a00;
+    background: linear-gradient(145deg, rgba(255,122,0,0.07), rgba(255,122,0,0.02));
+}
 
-    st.title("SELECIONE AS ÁREAS DO SIMULADO")
+.verde {
+    border-color:#00e0a4;
+    background: linear-gradient(145deg, rgba(0,224,164,0.07), rgba(0,224,164,0.02));
+}
 
-    col1, col2 = st.columns(2)
+.roxo {
+    border-color:#a855f7;
+    background: linear-gradient(145deg, rgba(168,85,247,0.07), rgba(168,85,247,0.02));
+}
 
-    def toggle(area):
-        if area in st.session_state.areas:
-            st.session_state.areas.remove(area)
-        else:
-            st.session_state.areas.append(area)
+.azul {
+    border-color:#3b82f6;
+    background: linear-gradient(145deg, rgba(59,130,246,0.07), rgba(59,130,246,0.02));
+}
 
-    with col1:
-        st.button("✓ Linguagens" if "Linguagens" in st.session_state.areas else "Linguagens",
-                  on_click=toggle, args=("Linguagens",))
-        st.button("✓ Ciências Humanas" if "Ciências Humanas" in st.session_state.areas else "Ciências Humanas",
-                  on_click=toggle, args=("Ciências Humanas",))
+.card h3 {
+    margin-bottom:5px;
+    font-weight:600;
+}
 
-    with col2:
-        st.button("✓ Ciências da Natureza" if "Ciências da Natureza" in st.session_state.areas else "Ciências da Natureza",
-                  on_click=toggle, args=("Ciências da Natureza",))
-        st.button("✓ Matemática" if "Matemática" in st.session_state.areas else "Matemática",
-                  on_click=toggle, args=("Matemática",))
+.card p {
+    font-size:13px;
+    color:#7f8794;
+}
 
-    total = len(st.session_state.areas) * 10
-    st.write(f"{total} questões selecionadas")
+/* Botões secundários */
+.stButton > button {
+    background: transparent;
+    border:1px solid #ff7a00;
+    color:#ff7a00;
+    border-radius:12px;
+    padding:8px 18px;
+}
 
-    if st.button("INICIAR SIMULADO →"):
-        if len(st.session_state.areas) == 0:
-            st.warning("Selecione pelo menos uma área.")
-        else:
-            iniciar_simulado()
+.stButton > button:hover {
+    background:#ff7a00;
+    color:white;
+}
 
-# ---------------------------------------------------
-# TELA QUIZ
-# ---------------------------------------------------
-elif st.session_state.tela == "quiz":
+/* Botão principal */
+.botao-principal button {
+    background:#ff7a00 !important;
+    color:white !important;
+    font-weight:600;
+    border:none !important;
+    border-radius:14px !important;
+    padding:14px 35px !important;
+    box-shadow:0 0 25px rgba(255,122,0,0.5);
+    transition:0.3s;
+}
 
-    questoes = st.session_state.questoes
-    indice = st.session_state.indice
+.botao-principal button:hover {
+    transform: scale(1.05);
+}
 
-    if indice < len(questoes):
+.center {
+    display:flex;
+    justify-content:center;
+    margin-top:35px;
+}
 
-        q = questoes[indice]
+.contador {
+    text-align:center;
+    color:#7f8794;
+    margin-top:10px;
+    font-size:13px;
+}
 
-        st.subheader(f"Questão {indice+1} de {len(questoes)}")
-        st.markdown(f"**Área:** {q['area']} | **Dificuldade:** {q['dificuldade']}")
-        st.write(q["enunciado"])
+</style>
+""", unsafe_allow_html=True)
 
-        resposta = st.radio(
-            "Escolha a alternativa:",
-            q["alternativas"],
-            key=f"q_{indice}"
-        )
+# -------------------------
+# HEADER
+# -------------------------
+st.markdown('<div class="topo">PREPARATÓRIO OFICIAL</div>', unsafe_allow_html=True)
+st.markdown('<div class="titulo-enem">ENEM</div>', unsafe_allow_html=True)
+st.markdown('<div class="subtitulo">Simulador</div>', unsafe_allow_html=True)
+st.markdown('<div class="descricao">40 questões · 4 áreas · Análise por competência · Shuffled</div>', unsafe_allow_html=True)
+st.markdown('<div class="secao">SELECIONE AS ÁREAS DO SIMULADO</div>', unsafe_allow_html=True)
 
-        col1, col2 = st.columns(2)
+# -------------------------
+# CARDS
+# -------------------------
+col1, col2 = st.columns(2)
 
-        with col1:
-            if st.button("Próxima ➡️"):
-                st.session_state.respostas[indice] = q["alternativas"].index(resposta)
-                st.session_state.indice += 1
-                st.rerun()
+with col1:
+    st.markdown("""
+    <div class="card laranja">
+        <h3 style="color:#ff7a00;">✍ Linguagens</h3>
+        <p>10 questões</p>
+    </div>
+    """, unsafe_allow_html=True)
+    st.button("✓ LINGUAGENS")
 
-        with col2:
-            if st.button("Finalizar Simulado"):
-                st.session_state.tela = "resultado"
-                st.rerun()
+with col2:
+    st.markdown("""
+    <div class="card verde">
+        <h3 style="color:#00e0a4;">🔬 Ciências da Natureza</h3>
+        <p>10 questões</p>
+    </div>
+    """, unsafe_allow_html=True)
+    st.button("✓ CIÊNCIAS DA NATUREZA")
 
-    else:
-        st.session_state.tela = "resultado"
-        st.rerun()
+col3, col4 = st.columns(2)
 
-# ---------------------------------------------------
-# RESULTADO
-# ---------------------------------------------------
-elif st.session_state.tela == "resultado":
+with col3:
+    st.markdown("""
+    <div class="card roxo">
+        <h3 style="color:#a855f7;">🏛 Ciências Humanas</h3>
+        <p>10 questões</p>
+    </div>
+    """, unsafe_allow_html=True)
+    st.button("✓ CIÊNCIAS HUMANAS")
 
-    st.title("Resultado Final")
+with col4:
+    st.markdown("""
+    <div class="card azul">
+        <h3 style="color:#3b82f6;">📐 Matemática</h3>
+        <p>10 questões</p>
+    </div>
+    """, unsafe_allow_html=True)
+    st.button("✓ MATEMÁTICA")
 
-    total = len(st.session_state.questoes)
-    acertos = 0
+st.markdown('<div class="contador">40 questões selecionadas</div>', unsafe_allow_html=True)
 
-    for i, q in enumerate(st.session_state.questoes):
-        if i in st.session_state.respostas:
-            if st.session_state.respostas[i] == q["correta"]:
-                acertos += 1
-
-    percentual = (acertos / total) * 100
-
-    st.metric("Acertos", f"{acertos}/{total}")
-    st.metric("Percentual", f"{percentual:.1f}%")
-
-    if st.button("Novo Simulado"):
-        st.session_state.tela = "inicio"
-        st.session_state.areas = []
-        st.rerun()
+st.markdown('<div class="center botao-principal">', unsafe_allow_html=True)
+st.button("INICIAR SIMULADO →")
+st.markdown('</div>', unsafe_allow_html=True)
