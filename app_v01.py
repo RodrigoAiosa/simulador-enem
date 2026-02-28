@@ -1,20 +1,19 @@
 import streamlit as st
 import json
 import random
-from collections import Counter
 
-# ----------------------------------
-# CONFIGURAÇÃO DA PÁGINA
-# ----------------------------------
+# --------------------------------------------------
+# CONFIG
+# --------------------------------------------------
 st.set_page_config(
     page_title="Simulado ENEM",
-    page_icon="📚",
+    page_icon="📘",
     layout="wide"
 )
 
-# ----------------------------------
-# CARREGAR PERGUNTAS
-# ----------------------------------
+# --------------------------------------------------
+# LOAD DATA
+# --------------------------------------------------
 @st.cache_data
 def carregar_perguntas():
     with open("perguntas_400.json", "r", encoding="utf-8") as f:
@@ -22,124 +21,129 @@ def carregar_perguntas():
 
 PERGUNTAS = carregar_perguntas()
 
-# ----------------------------------
-# ESTADO INICIAL
-# ----------------------------------
-if "tela" not in st.session_state:
-    st.session_state.tela = "inicio"
+AREA_CORES = {
+    "Linguagens": "#E53935",
+    "Matemática": "#1E88E5",
+    "Ciências Humanas": "#8E24AA",
+    "Ciências da Natureza": "#43A047"
+}
 
+AREA_ICONES = {
+    "Linguagens": "📝",
+    "Matemática": "📐",
+    "Ciências Humanas": "🌎",
+    "Ciências da Natureza": "🔬"
+}
+
+# --------------------------------------------------
+# SESSION STATE
+# --------------------------------------------------
 if "areas_selecionadas" not in st.session_state:
-    st.session_state.areas_selecionadas = []
+    st.session_state.areas_selecionadas = list(AREA_CORES.keys())
 
-if "questoes_ativas" not in st.session_state:
-    st.session_state.questoes_ativas = []
+if "quantidade" not in st.session_state:
+    st.session_state.quantidade = 10
 
-if "indice_atual" not in st.session_state:
-    st.session_state.indice_atual = 0
+if "simulado_iniciado" not in st.session_state:
+    st.session_state.simulado_iniciado = False
+
+if "questoes_sorteadas" not in st.session_state:
+    st.session_state.questoes_sorteadas = []
 
 if "respostas" not in st.session_state:
     st.session_state.respostas = {}
 
-# ----------------------------------
-# FUNÇÃO INICIAR SIMULADO
-# ----------------------------------
-def iniciar_simulado():
-    questoes_final = []
+# --------------------------------------------------
+# HOME
+# --------------------------------------------------
+if not st.session_state.simulado_iniciado:
 
-    for area in st.session_state.areas_selecionadas:
-        qs_area = [q for q in PERGUNTAS if q["area"] == area]
-        random.shuffle(qs_area)
-        questoes_final.extend(qs_area[:10])  # 10 por área
+    st.title("📘 Simulado ENEM Inteligente")
 
-    random.shuffle(questoes_final)
+    st.subheader("Selecione as áreas:")
 
-    st.session_state.questoes_ativas = questoes_final
-    st.session_state.indice_atual = 0
-    st.session_state.respostas = {}
-    st.session_state.tela = "quiz"
+    cols = st.columns(4)
 
-# ----------------------------------
-# TELA INICIAL
-# ----------------------------------
-if st.session_state.tela == "inicio":
+    for i, area in enumerate(AREA_CORES.keys()):
+        with cols[i]:
+            selecionado = area in st.session_state.areas_selecionadas
+            if st.checkbox(area, value=selecionado):
+                if area not in st.session_state.areas_selecionadas:
+                    st.session_state.areas_selecionadas.append(area)
+            else:
+                if area in st.session_state.areas_selecionadas:
+                    if len(st.session_state.areas_selecionadas) > 1:
+                        st.session_state.areas_selecionadas.remove(area)
 
-    st.title("📚 Simulado ENEM Inteligente")
+    st.divider()
 
-    areas = list(set(q["area"] for q in PERGUNTAS))
-    selecionadas = st.multiselect(
-        "Selecione as áreas:",
-        areas
+    st.subheader("Quantidade de questões")
+    st.session_state.quantidade = st.slider(
+        "Escolha a quantidade",
+        min_value=5,
+        max_value=50,
+        value=10,
+        step=5
     )
 
-    st.session_state.areas_selecionadas = selecionadas
+    st.divider()
 
-    if st.button("🚀 Iniciar Simulado"):
-        if len(selecionadas) == 0:
-            st.warning("Selecione pelo menos uma área.")
-        else:
-            iniciar_simulado()
+    if st.button("🚀 Iniciar Simulado", use_container_width=True):
 
-# ----------------------------------
-# TELA QUIZ
-# ----------------------------------
-elif st.session_state.tela == "quiz":
+        banco_filtrado = [
+            q for q in PERGUNTAS
+            if q["area"] in st.session_state.areas_selecionadas
+        ]
 
-    total = len(st.session_state.questoes_ativas)
-    indice = st.session_state.indice_atual
-    questao = st.session_state.questoes_ativas[indice]
+        st.session_state.questoes_sorteadas = random.sample(
+            banco_filtrado,
+            st.session_state.quantidade
+        )
 
-    st.progress((indice + 1) / total)
+        st.session_state.respostas = {}
+        st.session_state.simulado_iniciado = True
+        st.rerun()
 
-    st.subheader(f"Questão {indice + 1} de {total}")
-    st.markdown(f"**Área:** {questao['area']}")
-    st.markdown(questao["pergunta"])
+# --------------------------------------------------
+# SIMULADO
+# --------------------------------------------------
+else:
 
-    alternativa = st.radio(
-        "Escolha uma alternativa:",
-        questao["alternativas"],
-        key=f"radio_{indice}"
-    )
+    st.title("🧠 Simulado em andamento")
 
-    if st.button("Salvar Resposta"):
-        st.session_state.respostas[indice] = alternativa
+    for i, questao in enumerate(st.session_state.questoes_sorteadas):
+
+        st.markdown(f"### Questão {i+1}")
+        st.write(questao["pergunta"])
+
+        alternativa = st.radio(
+            "Escolha uma alternativa:",
+            questao["alternativas"],
+            key=f"q_{i}"
+        )
+
+        st.session_state.respostas[i] = alternativa
+        st.divider()
 
     col1, col2 = st.columns(2)
 
     with col1:
-        if st.button("⬅️ Anterior") and indice > 0:
-            st.session_state.indice_atual -= 1
+        if st.button("📊 Finalizar Simulado", use_container_width=True):
+
+            acertos = 0
+
+            for i, questao in enumerate(st.session_state.questoes_sorteadas):
+                if st.session_state.respostas.get(i) == questao["resposta_correta"]:
+                    acertos += 1
+
+            percentual = (acertos / len(st.session_state.questoes_sorteadas)) * 100
+
+            st.success(f"Você acertou {acertos} de {len(st.session_state.questoes_sorteadas)} questões.")
+            st.info(f"Aproveitamento: {percentual:.1f}%")
 
     with col2:
-        if st.button("➡️ Próxima"):
-            if indice < total - 1:
-                st.session_state.indice_atual += 1
-            else:
-                st.session_state.tela = "resultado"
-
-# ----------------------------------
-# TELA RESULTADO
-# ----------------------------------
-elif st.session_state.tela == "resultado":
-
-    st.title("📊 Resultado Final")
-
-    acertos = 0
-    total = len(st.session_state.questoes_ativas)
-    desempenho_area = Counter()
-
-    for i, questao in enumerate(st.session_state.questoes_ativas):
-        resposta_usuario = st.session_state.respostas.get(i)
-        if resposta_usuario == questao["resposta"]:
-            acertos += 1
-            desempenho_area[questao["area"]] += 1
-
-    porcentagem = (acertos / total) * 100
-
-    st.metric("Total de Acertos", f"{acertos} / {total}")
-    st.metric("Aproveitamento", f"{porcentagem:.1f}%")
-
-    st.subheader("📈 Desempenho por Área")
-    st.bar_chart(desempenho_area)
-
-    if st.button("🔄 Refazer Simulado"):
-        st.session_state.tela = "inicio"
+        if st.button("🔄 Reiniciar", use_container_width=True):
+            st.session_state.simulado_iniciado = False
+            st.session_state.questoes_sorteadas = []
+            st.session_state.respostas = {}
+            st.rerun()
