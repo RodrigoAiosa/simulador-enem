@@ -13,7 +13,7 @@ st.set_page_config(
     page_title="Simulador ENEM",
     page_icon="🎓",
     layout="centered",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_bar="collapsed",
 )
 
 # ── CSS ─────────────────────────────────────────────────────────────────────
@@ -445,6 +445,7 @@ def init_state():
         "historico": [],
         "tempo_inicio": None,
         "tempo_decorrido": 0,
+        "user_agent": "",
     }
     for k, v in defaults.items():
         if k not in st.session_state:
@@ -485,6 +486,17 @@ def finalizar():
     total = len(qs)
     pct = round(acertos / total * 100) if total else 0
     st.session_state.historico.append({"acertos": acertos, "total": total, "pct": pct})
+
+    # ── Calcula duração e registra acesso completo no banco ──
+    duracao_seg = int((datetime.now() - st.session_state.tempo_inicio).total_seconds()) \
+        if st.session_state.tempo_inicio else 0
+
+    registrar_acesso(
+        nome=st.session_state.nome_aluno,
+        user_agent=st.session_state.get("user_agent", ""),
+        duracao_segundos=duracao_seg
+    )
+
     st.session_state.tela = "resultado"
 
 def calcular_por_area():
@@ -505,7 +517,7 @@ def gerar_relatorio_excel():
     else:
         tempo_fim = datetime.now()
         tempo_total_seg = (tempo_fim - st.session_state.tempo_inicio).total_seconds()
-    
+
     minutos, segundos = divmod(int(tempo_total_seg), 60)
     horas, minutos = divmod(minutos, 60)
     tempo_formatado = f"{horas:02d}:{minutos:02d}:{segundos:02d}"
@@ -575,13 +587,14 @@ if st.session_state.tela == "nome":
     st.markdown("<div class='titulo-enem'>ENEM</div>", unsafe_allow_html=True)
     st.markdown("<div class='titulo-simulador'>Simulador</div>", unsafe_allow_html=True)
     st.markdown("<div class='subtitulo'>Bem-vindo! Informe seu nome para começar.</div>", unsafe_allow_html=True)
-    
+
     st.session_state.nome_aluno = st.text_input("Seu nome:", value=st.session_state.nome_aluno)
-    
+
     _, mid, _ = st.columns([1, 2, 1])
     with mid:
         if st.button("Avançar →", type="primary", use_container_width=True, disabled=not st.session_state.nome_aluno.strip()):
-            registrar_acesso(st.session_state.nome_aluno)  # ← NOVO: registra acesso no banco
+            # ── Captura User-Agent via query params (se disponível) ──
+            st.session_state.user_agent = st.query_params.get("ua", "")
             st.session_state.tela = "home"
             st.rerun()
 
