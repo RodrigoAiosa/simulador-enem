@@ -1,0 +1,530 @@
+[
+  {
+    "id": 1,
+    "area": "Linguagens",
+    "competencia": "Interpretação de Texto",
+    "enunciado": "Leia o trecho a seguir:\n\n\"A tecnologia não é boa nem má, mas também não é neutra.\" (Melvin Kranzberg)\n\nEssa afirmação sugere que a tecnologia:",
+    "alternativas": [
+      "Possui valor moral intrínseco, podendo ser classificada objetivamente como benéfica.",
+      "Tem impactos que dependem do contexto social e do uso humano.",
+      "É indiferente aos seus efeitos na sociedade.",
+      "Deve ser avaliada apenas por critérios técnicos.",
+      "Não possui qualquer relação com a ética humana."
+    ],
+    "correta": 1,
+    "explicacao": "Kranzberg destaca que a tecnologia não tem valor moral próprio, mas seus efeitos variam conforme o contexto social, político e cultural em que é aplicada — tornando-a dependente do uso humano."
+  },
+  {
+    "id": 2,
+    "area": "Linguagens",
+    "competencia": "Redação — Argumentação",
+    "enunciado": "Sobre a estrutura de uma redação dissertativa-argumentativa no ENEM, é correto afirmar que:",
+    "alternativas": [
+      "A conclusão deve introduzir novos argumentos para surpreender o avaliador.",
+      "O desenvolvimento pode ter qualquer número de parágrafos sem critério de coesão.",
+      "A introdução deve apresentar o tema e a tese do texto.",
+      "A proposta de intervenção é opcional e não influencia na nota.",
+      "O texto deve ser redigido na primeira pessoa do plural obrigatoriamente."
+    ],
+    "correta": 2,
+    "explicacao": "A introdução tem função de contextualizar o tema e apresentar o ponto de vista (tese) que será defendido ao longo do texto. A proposta de intervenção é obrigatória e vale 200 pontos na competência V."
+  },
+  {
+    "id": 3,
+    "area": "Linguagens",
+    "competencia": "Literatura Brasileira",
+    "enunciado": "O Romantismo brasileiro, iniciado com a publicação de 'Suspiros Poéticos e Saudades' (1836), de Gonçalves de Magalhães, apresenta como característica central:",
+    "alternativas": [
+      "A valorização da razão e das formas clássicas greco-latinas.",
+      "O exame objetivo da realidade social, com foco nas classes populares.",
+      "A exaltação do sentimento, da natureza e do nacionalismo.",
+      "A crítica ao sentimentalismo exacerbado e o distanciamento irônico.",
+      "A ruptura total com a tradição literária portuguesa."
+    ],
+    "correta": 2,
+    "explicacao": "O Romantismo é marcado pela ênfase no sentimento individual, na natureza como espelho da alma e no nacionalismo — no Brasil, isso se manifesta na idealização do índio e na exaltação da pátria."
+  },
+  {
+    "id": 4,
+    "area": "Linguagens",
+    "competencia": "Gramática e Linguagem",
+    "enunciado": "Analise o período: 'Embora chovesse muito, os jogadores permaneceram em campo.'\n\nA oração 'Embora chovesse muito' é classificada como:",
+    "alternativas": [
+      "Oração subordinada adverbial causal.",
+      "Oração subordinada adverbial concessiva.",
+      "Oração subordinada adverbial condicional.",
+      "Oração subordinada adverbial consecutiva.",
+      "Oração coordenada adversativa."
+    ],
+    "correta": 1,
+    "explicacao": "A conjunção 'embora' introduz uma ideia de concessão — algo que ocorre apesar de um obstáculo. Orações concessivas indicam que a consequência ocorre mesmo com a existência de uma condição contrária."
+  },
+  {
+    "id": 5,
+    "area": "Linguagens",
+    "competencia": "Variação Linguística",
+    "enunciado": "A existência de diferentes variedades linguísticas no Brasil (dialetos regionais, gírias, linguagem formal etc.) é resultado de:",
+    "alternativas": [
+      "Erros gramaticais cometidos por falantes sem instrução formal.",
+      "Influência negativa de línguas estrangeiras sobre o português.",
+      "Fatores históricos, geográficos, sociais e culturais que moldam a língua.",
+      "Falta de padronização do ensino de língua portuguesa no país.",
+      "Degeneração progressiva do idioma nas últimas décadas."
+    ],
+    "correta": 2,
+    "explicacao": "A variação linguística é natural e inevitável em qualquer língua viva. No Brasil, o histórico de colonização, a extensão territorial e a diversidade étnica e social explicam a riqueza das variedades do português brasileiro."
+  },
+  {
+    "id": 6,
+    "area": "Linguagens",
+    "competencia": "Semiótica e Linguagem Visual",
+    "enunciado": "Em textos publicitários, o uso combinado de imagem e texto verbal caracteriza o que os estudos semióticos denominam de:",
+    "alternativas": [
+      "Intertextualidade fonológica.",
+      "Polifonia gramatical.",
+      "Linguagem verbo-visual.",
+      "Ambiguidade sintática.",
+      "Metalinguagem narrativa."
+    ],
+    "correta": 2,
+    "explicacao": "A linguagem verbo-visual combina recursos visuais (imagens, cores, disposição gráfica) e verbais (palavras, frases) para construir sentidos. Em publicidade, esses dois planos se complementam e reforçam a mensagem."
+  },
+  {
+    "id": 7,
+    "area": "Linguagens",
+    "competencia": "Gêneros Textuais",
+    "enunciado": "O gênero textual 'crônica' distingue-se de outros gêneros jornalísticos porque:",
+    "alternativas": [
+      "Apresenta apenas dados objetivos sem nenhuma subjetividade.",
+      "Tem como único objetivo relatar fatos históricos.",
+      "É marcado pela impessoalidade e linguagem técnica.",
+      "Combina o cotidiano com reflexão subjetiva e estilo literário.",
+      "Segue rigorosamente a estrutura da notícia jornalística."
+    ],
+    "correta": 3,
+    "explicacao": "A crônica parte de fatos do cotidiano para fazer reflexões com tom pessoal e estilo literário. Diferencia-se da notícia pela subjetividade e da literatura pela ancoragem no presente imediato."
+  },
+  {
+    "id": 8,
+    "area": "Linguagens",
+    "competencia": "Modernismo Brasileiro",
+    "enunciado": "A Semana de Arte Moderna de 1922 representou uma ruptura com o passado literário e artístico brasileiro. Entre suas propostas estavam:",
+    "alternativas": [
+      "A valorização do Parnasianismo e da métrica clássica.",
+      "A busca por uma arte genuinamente brasileira e a liberdade formal.",
+      "O retorno à linguagem erudita e distante da fala popular.",
+      "A negação de toda influência europeia na cultura nacional.",
+      "A exaltação do modelo neoclássico como padrão estético."
+    ],
+    "correta": 1,
+    "explicacao": "O Modernismo de 1922 propôs a valorização da cultura e da identidade brasileiras, a liberdade de forma (versos livres, ausência de métrica rígida) e a incorporação da linguagem coloquial, rompendo com os cânones parnasianos."
+  },
+  {
+    "id": 9,
+    "area": "Linguagens",
+    "competencia": "Coesão e Coerência",
+    "enunciado": "No trecho 'O candidato apresentou propostas inovadoras. Contudo, poucos acreditaram em sua viabilidade.', o conectivo 'Contudo' estabelece entre os dois períodos uma relação de:",
+    "alternativas": [
+      "Causa e consequência.",
+      "Adição e complemento.",
+      "Contraste e oposição.",
+      "Condição e hipótese.",
+      "Explicação e exemplificação."
+    ],
+    "correta": 2,
+    "explicacao": "'Contudo' é uma conjunção adversativa que introduz uma ideia contrária ou que limita a anterior. Aqui: apresentar propostas inovadoras é positivo, mas a descrença na viabilidade contrasta com essa expectativa."
+  },
+  {
+    "id": 10,
+    "area": "Linguagens",
+    "competencia": "Intertextualidade",
+    "enunciado": "Quando um texto faz referência explícita ou implícita a outro texto, incorporando sua forma, tema ou estilo, ocorre o fenômeno da:",
+    "alternativas": [
+      "Ambiguidade lexical.",
+      "Intertextualidade.",
+      "Polissemia semântica.",
+      "Metalinguagem pura.",
+      "Variação diastrática."
+    ],
+    "correta": 1,
+    "explicacao": "A intertextualidade é a relação que um texto estabelece com outros textos, podendo ocorrer por citação, alusão, paródia ou pastiche. É um recurso fundamental na construção de sentidos, tanto em textos literários como em publicidade."
+  },
+  {
+    "id": 11,
+    "area": "Ciências Humanas",
+    "competencia": "História do Brasil — Era Vargas",
+    "enunciado": "O processo de industrialização brasileiro, intensificado a partir da Era Vargas (1930–1945), caracterizou-se principalmente por:",
+    "alternativas": [
+      "Abertura irrestrita ao capital estrangeiro e privatização das empresas de base.",
+      "Forte intervenção estatal com criação de empresas públicas e protecionismo industrial.",
+      "Desenvolvimento espontâneo liderado por pequenas e médias empresas nacionais.",
+      "Exclusiva dependência do setor agrário para financiar o parque industrial.",
+      "Adoção do modelo neoliberal com redução do papel do Estado na economia."
+    ],
+    "correta": 1,
+    "explicacao": "A industrialização varguista foi marcada pelo nacional-desenvolvimentismo: Estado como protagonista, criação de empresas como a CSN e Vale do Rio Doce, e proteção da indústria nacional contra a concorrência externa."
+  },
+  {
+    "id": 12,
+    "area": "Ciências Humanas",
+    "competencia": "Geografia — Urbanização",
+    "enunciado": "O fenômeno das 'cidades-dormitório' no Brasil é consequência direta de:",
+    "alternativas": [
+      "Políticas de descentralização industrial bem-sucedidas.",
+      "Alta disponibilidade de empregos nos municípios periféricos.",
+      "Crescimento urbano desordenado e concentração de empregos nos centros.",
+      "Migração voluntária em busca de melhor qualidade de vida no interior.",
+      "Implementação de zonas industriais nos municípios satélites."
+    ],
+    "correta": 2,
+    "explicacao": "Cidades-dormitório surgem quando municípios periféricos crescem populacionalmente sem desenvolvimento econômico proporcional. Os moradores dormem na periferia, mas trabalham nos grandes centros, gerando intensos fluxos pendulares."
+  },
+  {
+    "id": 13,
+    "area": "Ciências Humanas",
+    "competencia": "Sociologia — Durkheim",
+    "enunciado": "Para Émile Durkheim, a 'anomia' social refere-se a:",
+    "alternativas": [
+      "Situação de harmonia e coesão social entre diferentes classes.",
+      "Estado de ausência ou enfraquecimento das normas que regulam a vida social.",
+      "Fenômeno de integração cultural entre diferentes povos.",
+      "Processo de aumento da solidariedade orgânica nas sociedades modernas.",
+      "Condição de dominação econômica de uma classe sobre outra."
+    ],
+    "correta": 1,
+    "explicacao": "Para Durkheim, a anomia é um estado de desregulação social em que as normas coletivas perdem força ou clareza. Isso pode ocorrer em períodos de transformação acelerada, levando a comportamentos desviantes e aumento do suicídio."
+  },
+  {
+    "id": 14,
+    "area": "Ciências Humanas",
+    "competencia": "História Geral — Segunda Guerra",
+    "enunciado": "O Holocausto, perpetrado pelo regime nazista durante a Segunda Guerra Mundial, foi possível em parte pela:",
+    "alternativas": [
+      "Resistência organizada da população alemã contra Hitler.",
+      "Neutralidade das potências ocidentais durante todo o conflito.",
+      "Construção de um aparato burocrático e propagandístico de desumanização.",
+      "Indiferença total da Igreja Católica aos acontecimentos na Europa.",
+      "Ausência de qualquer base ideológica por parte do nazismo."
+    ],
+    "correta": 2,
+    "explicacao": "O Holocausto foi viabilizado por uma complexa estrutura burocrática, pela propaganda de massa que desumanizava judeus e minorias, e pela participação de cidadãos comuns no aparato de extermínio — como analisado por Hannah Arendt."
+  },
+  {
+    "id": 15,
+    "area": "Ciências Humanas",
+    "competencia": "Geografia — Geopolítica",
+    "enunciado": "A criação da OPEP (Organização dos Países Exportadores de Petróleo) em 1960 representou, geopoliticamente:",
+    "alternativas": [
+      "Tentativa dos países desenvolvidos de controlar o preço do petróleo.",
+      "Aliança militar entre países do Oriente Médio contra o Ocidente.",
+      "Instrumento de países produtores para regular a oferta e o preço do petróleo.",
+      "Acordo ambiental para redução da exploração de combustíveis fósseis.",
+      "Bloco econômico para promover o livre comércio de energia."
+    ],
+    "correta": 2,
+    "explicacao": "A OPEP surgiu como resposta de países produtores ao controle das grandes empresas petrolíferas ocidentais. Ao regular a oferta, os membros passaram a ter maior poder sobre os preços no mercado global."
+  },
+  {
+    "id": 16,
+    "area": "Ciências Humanas",
+    "competencia": "Filosofia — Ética Kantiana",
+    "enunciado": "Para Immanuel Kant, uma ação é moralmente correta quando:",
+    "alternativas": [
+      "Produz a maior felicidade para o maior número de pessoas.",
+      "Segue os mandamentos religiosos estabelecidos pela tradição.",
+      "Pode ser universalizada como lei para todos os seres racionais.",
+      "Beneficia diretamente o interesse pessoal do agente.",
+      "Está de acordo com os costumes e normas da sociedade."
+    ],
+    "correta": 2,
+    "explicacao": "O imperativo categórico de Kant estabelece que devemos agir apenas segundo máximas que possamos querer que se tornem leis universais. A moralidade kantiana é deontológica — baseada no dever, não nas consequências."
+  },
+  {
+    "id": 17,
+    "area": "Ciências Humanas",
+    "competencia": "Brasil Colonial",
+    "enunciado": "O Sistema de Sesmarias, implementado no Brasil colonial, teve como principal consequência estrutural:",
+    "alternativas": [
+      "A distribuição equitativa de terras entre colonos e indígenas.",
+      "A formação do latifúndio como base da estrutura fundiária brasileira.",
+      "A criação de reservas ambientais ao longo do litoral.",
+      "O desenvolvimento de pequenas propriedades de subsistência.",
+      "O financiamento exclusivo da construção de vilas e cidades coloniais."
+    ],
+    "correta": 1,
+    "explicacao": "As sesmarias eram concessões de grandes extensões de terra a colonos. Esse sistema gerou a grande propriedade fundiária (latifúndio) que marcou estruturalmente a formação territorial e social do Brasil."
+  },
+  {
+    "id": 18,
+    "area": "Ciências Humanas",
+    "competencia": "Globalização e Desigualdade",
+    "enunciado": "A globalização econômica contemporânea tem sido associada ao aumento das desigualdades entre países porque:",
+    "alternativas": [
+      "Proíbe o acesso de países pobres ao comércio internacional.",
+      "Distribui de forma equitativa os benefícios do livre comércio.",
+      "Concentra fluxos de capital e tecnologia nos países desenvolvidos.",
+      "Elimina as multinacionais dos países em desenvolvimento.",
+      "Reduz a exportação de commodities dos países periféricos."
+    ],
+    "correta": 2,
+    "explicacao": "Apesar de ampliar o comércio, a globalização tende a beneficiar países com maior capacidade tecnológica e financeira. Os países periféricos ficam especializados em exportar commodities de baixo valor agregado, perpetuando a dependência."
+  },
+  {
+    "id": 19,
+    "area": "Ciências Humanas",
+    "competencia": "Direitos Humanos",
+    "enunciado": "A Declaração Universal dos Direitos Humanos (1948) foi elaborada no pós-guerra com o objetivo de:",
+    "alternativas": [
+      "Estabelecer regras para a ocupação militar de países vencidos.",
+      "Criar um sistema de sanções econômicas contra ditaduras.",
+      "Afirmar direitos inalienáveis a todos os seres humanos, independentemente de nacionalidade.",
+      "Regular o comércio internacional entre as nações aliadas.",
+      "Substituir as constituições nacionais por um código global único."
+    ],
+    "correta": 2,
+    "explicacao": "Diante das atrocidades da Segunda Guerra, a ONU elaborou a DUDH para proclamar que todo ser humano possui direitos fundamentais — civis, políticos, econômicos e sociais — que nenhum Estado pode violar."
+  },
+  {
+    "id": 20,
+    "area": "Ciências Humanas",
+    "competencia": "Ditadura Militar no Brasil",
+    "enunciado": "O Ato Institucional nº 5 (AI-5), decretado em dezembro de 1968 durante a ditadura militar brasileira, ficou conhecido como 'o golpe dentro do golpe' porque:",
+    "alternativas": [
+      "Marcou o início do regime militar em 1964.",
+      "Criou novas eleições diretas para presidente da República.",
+      "Suspendeu direitos políticos, fechou o Congresso e intensificou a repressão.",
+      "Estabeleceu a abertura política e o retorno à democracia.",
+      "Criou a Constituição de 1967 e o sistema bipartidário."
+    ],
+    "correta": 2,
+    "explicacao": "O AI-5 representou o endurecimento máximo do regime: suspendeu o habeas corpus, deu ao presidente poder de fechar o Congresso, cassou mandatos e permitiu prisões sem julgamento. Inaugurou os 'anos de chumbo' da ditadura."
+  },
+  {
+    "id": 21,
+    "area": "Ciências da Natureza",
+    "competencia": "Química — Soluções e pH",
+    "enunciado": "Uma solução aquosa de NaOH 0,1 mol/L a 25°C apresenta pH igual a:",
+    "alternativas": ["1", "7", "10", "13", "14"],
+    "correta": 3,
+    "explicacao": "NaOH é base forte: [OH⁻] = 0,1 mol/L → pOH = –log(0,1) = 1 → pH = 14 – 1 = 13."
+  },
+  {
+    "id": 22,
+    "area": "Ciências da Natureza",
+    "competencia": "Física — Cinemática",
+    "enunciado": "Um carro parte do repouso e acelera uniformemente a 4 m/s². Após 5 segundos, sua velocidade será:",
+    "alternativas": ["4 m/s", "10 m/s", "20 m/s", "25 m/s", "40 m/s"],
+    "correta": 2,
+    "explicacao": "v = v₀ + a·t → v = 0 + 4 × 5 = 20 m/s. Como partiu do repouso (v₀ = 0) e a aceleração é constante, aplica-se diretamente a equação da cinemática."
+  },
+  {
+    "id": 23,
+    "area": "Ciências da Natureza",
+    "competencia": "Biologia — Genética Mendeliana",
+    "enunciado": "Em um cruzamento entre dois indivíduos heterozigotos (Aa × Aa) para um gene autossômico dominante, a proporção fenotípica esperada na prole é:",
+    "alternativas": [
+      "1 dominante : 1 recessivo",
+      "3 dominantes : 1 recessivo",
+      "Genótipo 1:2:1 e fenótipo 3:1",
+      "Todos dominantes",
+      "2 dominantes : 2 recessivos"
+    ],
+    "correta": 1,
+    "explicacao": "No cruzamento Aa × Aa, os genótipos resultantes são 1 AA : 2 Aa : 1 aa. Como A é dominante, AA e Aa têm o mesmo fenótipo. Logo, 3 com fenótipo dominante para 1 com fenótipo recessivo (3:1)."
+  },
+  {
+    "id": 24,
+    "area": "Ciências da Natureza",
+    "competencia": "Química — Reações Orgânicas",
+    "enunciado": "A fermentação alcoólica, processo utilizado na produção de etanol no Brasil, é uma transformação:",
+    "alternativas": [
+      "Física, pois não altera a composição da sacarose.",
+      "Nuclear, pois ocorre fissão das moléculas de açúcar.",
+      "Química, em que a glicose é convertida em etanol e CO₂ por microrganismos.",
+      "Química, em que o etanol é oxidado a ácido acético.",
+      "Física, que separa os componentes da mistura cana-de-açúcar."
+    ],
+    "correta": 2,
+    "explicacao": "Na fermentação alcoólica, leveduras convertem glicose (C₆H₁₂O₆) em etanol (C₂H₅OH) e gás carbônico (CO₂) em ambiente anaeróbico. É uma reação química de grande importância para a matriz energética brasileira."
+  },
+  {
+    "id": 25,
+    "area": "Ciências da Natureza",
+    "competencia": "Física — Termologia",
+    "enunciado": "Uma barra de ferro e uma barra de madeira, deixadas sob o sol, parecem ter temperaturas diferentes ao toque, embora estejam no mesmo ambiente. Isso ocorre porque:",
+    "alternativas": [
+      "O ferro tem temperatura maior porque é mais denso.",
+      "A madeira acumula mais calor por ser orgânica.",
+      "O ferro conduz calor melhor, transferindo-o rapidamente para a mão.",
+      "A madeira está mais aquecida por absorver mais radiação solar.",
+      "O ferro e a madeira têm capacidades térmicas iguais."
+    ],
+    "correta": 2,
+    "explicacao": "O ferro é excelente condutor térmico: ao tocá-lo, retira calor da mão rapidamente, dando sensação de frio intenso. A madeira é mau condutora, então o fluxo de calor é lento. Ambos estão à mesma temperatura — o que difere é a condutividade térmica."
+  },
+  {
+    "id": 26,
+    "area": "Ciências da Natureza",
+    "competencia": "Biologia — Ecologia e Meio Ambiente",
+    "enunciado": "O efeito estufa é um fenômeno natural essencial para a vida na Terra. O problema ambiental contemporâneo relacionado a ele consiste no:",
+    "alternativas": [
+      "Desaparecimento completo dos gases de efeito estufa.",
+      "Aumento excessivo da concentração de CO₂ e outros gases, intensificando o aquecimento.",
+      "Destruição da camada de ozônio pelos gases de efeito estufa.",
+      "Diminuição da temperatura global por excesso de nuvens.",
+      "Bloqueio total da radiação solar pelos poluentes atmosféricos."
+    ],
+    "correta": 1,
+    "explicacao": "O efeito estufa natural mantém a Terra habitável (cerca de 15°C em média). O problema é o aumento antrópico de CO₂ e metano que intensifica o fenômeno, elevando a temperatura média global e causando mudanças climáticas."
+  },
+  {
+    "id": 27,
+    "area": "Ciências da Natureza",
+    "competencia": "Química — Tabela Periódica",
+    "enunciado": "Os gases nobres (como Hélio, Neônio, Argônio) são muito estáveis e praticamente não formam compostos porque:",
+    "alternativas": [
+      "São muito pesados para reagir com outros elementos.",
+      "Possuem camada de valência completa com 8 elétrons (ou 2 para o hélio).",
+      "Têm número atômico muito elevado.",
+      "São encontrados apenas em estado sólido na natureza.",
+      "Apresentam alta eletronegatividade que repele outros átomos."
+    ],
+    "correta": 1,
+    "explicacao": "A estabilidade dos gases nobres decorre da configuração eletrônica com camada de valência completa (octeto — exceto o He com dupla). Essa configuração não favorece a formação de ligações químicas."
+  },
+  {
+    "id": 28,
+    "area": "Ciências da Natureza",
+    "competencia": "Física — Eletricidade",
+    "enunciado": "Em um circuito elétrico residencial, os aparelhos são ligados em paralelo porque isso permite que:",
+    "alternativas": [
+      "A tensão em cada aparelho seja diferente.",
+      "A corrente total seja menor que em cada aparelho.",
+      "Cada aparelho opere com a tensão total da rede.",
+      "O desligamento de um aparelho desligue todos os outros.",
+      "A resistência total seja maior que cada resistência individual."
+    ],
+    "correta": 2,
+    "explicacao": "Em circuitos paralelos, a tensão em cada ramo é igual à tensão total da fonte. Isso garante que cada aparelho funcione na tensão para a qual foi projetado, independentemente dos outros."
+  },
+  {
+    "id": 29,
+    "area": "Ciências da Natureza",
+    "competencia": "Biologia — Fisiologia Humana",
+    "enunciado": "A insulina, hormônio produzido pelo pâncreas, tem como função principal:",
+    "alternativas": [
+      "Elevar o nível de glicose no sangue após o jejum.",
+      "Estimular o sistema imunológico contra infecções.",
+      "Regular a absorção de cálcio nos ossos.",
+      "Facilitar a entrada de glicose nas células, reduzindo a glicemia.",
+      "Aumentar a produção de glóbulos vermelhos."
+    ],
+    "correta": 3,
+    "explicacao": "A insulina é produzida pelas células beta do pâncreas em resposta ao aumento da glicose sanguínea. Ela facilita a captação de glicose pelas células, reduzindo a glicemia. Sua deficiência ou resistência causa o diabetes mellitus."
+  },
+  {
+    "id": 30,
+    "area": "Ciências da Natureza",
+    "competencia": "Física — Óptica",
+    "enunciado": "Um raio de luz ao passar do ar para a água sofre refração. Nesse processo, o que invariavelmente ocorre é:",
+    "alternativas": [
+      "Aumento da velocidade de propagação da luz.",
+      "Mudança da frequência da luz.",
+      "Mudança da direção de propagação e da velocidade da luz.",
+      "Apenas mudança de cor, sem alteração de velocidade.",
+      "Reflexão total do feixe de luz."
+    ],
+    "correta": 2,
+    "explicacao": "Na refração, ao mudar de meio, a luz muda de velocidade (diminui ao entrar na água, que é mais densa opticamente). Essa mudança de velocidade causa a mudança de direção. A frequência (e cor) permanece constante."
+  },
+  {
+    "id": 31,
+    "area": "Matemática",
+    "competencia": "Funções Quadráticas",
+    "enunciado": "Uma função f(x) = 2x² – 8x + 6. O vértice desta parábola está localizado no ponto:",
+    "alternativas": ["(2, –2)", "(–2, 2)", "(4, 6)", "(2, 2)", "(–4, –2)"],
+    "correta": 0,
+    "explicacao": "Xv = –b/2a = 8/4 = 2. Yv = f(2) = 2(4) – 8(2) + 6 = 8 – 16 + 6 = –2. Vértice: (2, –2)."
+  },
+  {
+    "id": 32,
+    "area": "Matemática",
+    "competencia": "Porcentagem e Juros Simples",
+    "enunciado": "Um produto custava R$ 400,00 e teve um aumento de 15%. Após o aumento, qual é o novo preço?",
+    "alternativas": ["R$ 415,00", "R$ 440,00", "R$ 460,00", "R$ 480,00", "R$ 500,00"],
+    "correta": 2,
+    "explicacao": "Aumento de 15%: 400 × 1,15 = R$ 460,00. Ou: 15% de 400 = 60, então 400 + 60 = R$ 460,00."
+  },
+  {
+    "id": 33,
+    "area": "Matemática",
+    "competencia": "Geometria Plana",
+    "enunciado": "Um terreno retangular tem 30 m de comprimento e 20 m de largura. Qual é a área desse terreno?",
+    "alternativas": ["50 m²", "100 m²", "300 m²", "600 m²", "1200 m²"],
+    "correta": 3,
+    "explicacao": "Área do retângulo = comprimento × largura = 30 × 20 = 600 m²."
+  },
+  {
+    "id": 34,
+    "area": "Matemática",
+    "competencia": "Equações do 1º Grau",
+    "enunciado": "Resolva a equação: 3x + 7 = 22",
+    "alternativas": ["x = 3", "x = 5", "x = 7", "x = 9", "x = 15"],
+    "correta": 1,
+    "explicacao": "3x + 7 = 22 → 3x = 22 – 7 = 15 → x = 15/3 = 5."
+  },
+  {
+    "id": 35,
+    "area": "Matemática",
+    "competencia": "Probabilidade",
+    "enunciado": "Em um baralho comum de 52 cartas, qual é a probabilidade de retirar aleatoriamente um Ás?",
+    "alternativas": ["1/52", "1/13", "1/4", "1/26", "2/13"],
+    "correta": 1,
+    "explicacao": "Há 4 Ases em um baralho de 52 cartas. P = 4/52 = 1/13 ≈ 7,69%."
+  },
+  {
+    "id": 36,
+    "area": "Matemática",
+    "competencia": "Progressão Aritmética",
+    "enunciado": "Em uma PA com primeiro termo a₁ = 3 e razão r = 4, qual é o 6º termo?",
+    "alternativas": ["19", "21", "23", "25", "27"],
+    "correta": 2,
+    "explicacao": "aₙ = a₁ + (n–1)·r → a₆ = 3 + (6–1)×4 = 3 + 20 = 23."
+  },
+  {
+    "id": 37,
+    "area": "Matemática",
+    "competencia": "Trigonometria",
+    "enunciado": "Em um triângulo retângulo, o ângulo α = 30°. Se o lado oposto mede 5 cm, qual é a hipotenusa? (sen 30° = 0,5)",
+    "alternativas": ["5 cm", "7,5 cm", "10 cm", "12,5 cm", "15 cm"],
+    "correta": 2,
+    "explicacao": "sen α = oposto/hipotenusa → 0,5 = 5/h → h = 5/0,5 = 10 cm."
+  },
+  {
+    "id": 38,
+    "area": "Matemática",
+    "competencia": "Estatística — Média",
+    "enunciado": "As notas de 5 alunos foram: 6, 7, 8, 9 e 10. Qual é a média aritmética dessas notas?",
+    "alternativas": ["7", "7,5", "8", "8,5", "9"],
+    "correta": 2,
+    "explicacao": "Média = (6 + 7 + 8 + 9 + 10) / 5 = 40 / 5 = 8."
+  },
+  {
+    "id": 39,
+    "area": "Matemática",
+    "competencia": "Geometria Espacial",
+    "enunciado": "Um cubo tem aresta de 4 cm. Qual é o seu volume?",
+    "alternativas": ["16 cm³", "32 cm³", "48 cm³", "64 cm³", "96 cm³"],
+    "correta": 3,
+    "explicacao": "Volume do cubo = aresta³ = 4³ = 4 × 4 × 4 = 64 cm³."
+  },
+  {
+    "id": 40,
+    "area": "Matemática",
+    "competencia": "Análise Combinatória",
+    "enunciado": "De quantas maneiras diferentes podemos organizar as letras da palavra 'MESA'?",
+    "alternativas": ["4", "12", "16", "24", "48"],
+    "correta": 3,
+    "explicacao": "Anagrama de 4 letras todas distintas: P(4) = 4! = 4×3×2×1 = 24 arranjos possíveis."
+  }
+]
