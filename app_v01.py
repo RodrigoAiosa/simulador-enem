@@ -1,219 +1,145 @@
 import streamlit as st
+import json
+import random
+from collections import Counter
 
-st.set_page_config(layout="wide")
+# ----------------------------------
+# CONFIGURAÇÃO DA PÁGINA
+# ----------------------------------
+st.set_page_config(
+    page_title="Simulado ENEM",
+    page_icon="📚",
+    layout="wide"
+)
 
-# -------------------------
-# CSS PREMIUM OFICIAL
-# -------------------------
-st.markdown("""
-<style>
+# ----------------------------------
+# CARREGAR PERGUNTAS
+# ----------------------------------
+@st.cache_data
+def carregar_perguntas():
+    with open("perguntas_400.json", "r", encoding="utf-8") as f:
+        return json.load(f)
 
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Poppins:wght@300;400;600&display=swap');
+PERGUNTAS = carregar_perguntas()
 
-html, body, [class*="css"] {
-    background-color: #0a0f1c;
-    font-family: 'Poppins', sans-serif;
-}
+# ----------------------------------
+# ESTADO INICIAL
+# ----------------------------------
+if "tela" not in st.session_state:
+    st.session_state.tela = "inicio"
 
-header, footer, #MainMenu {
-    visibility: hidden;
-}
+if "areas_selecionadas" not in st.session_state:
+    st.session_state.areas_selecionadas = []
 
-/* Container central */
-.block-container {
-    padding-top: 3rem;
-    max-width: 1100px;
-}
+if "questoes_ativas" not in st.session_state:
+    st.session_state.questoes_ativas = []
 
-/* Topo pequeno */
-.topo {
-    text-align:center;
-    letter-spacing: 6px;
-    font-size: 12px;
-    color: #ff7a00;
-    margin-bottom: 20px;
-}
+if "indice_atual" not in st.session_state:
+    st.session_state.indice_atual = 0
 
-/* ENEM */
-.titulo-enem {
-    text-align:center;
-    font-family: 'Playfair Display', serif;
-    font-size: 90px;
-    font-weight: 800;
-    color: #f3efe7;
-    margin-bottom: -25px;
-}
+if "respostas" not in st.session_state:
+    st.session_state.respostas = {}
 
-/* Simulador */
-.subtitulo {
-    text-align:center;
-    font-size: 42px;
-    color: #ff7a00;
-    font-style: italic;
-    margin-bottom: 25px;
-}
+# ----------------------------------
+# FUNÇÃO INICIAR SIMULADO
+# ----------------------------------
+def iniciar_simulado():
+    questoes_final = []
 
-/* descrição */
-.descricao {
-    text-align:center;
-    color: #7f8794;
-    font-size: 14px;
-    letter-spacing: 1px;
-    margin-bottom: 50px;
-}
+    for area in st.session_state.areas_selecionadas:
+        qs_area = [q for q in PERGUNTAS if q["area"] == area]
+        random.shuffle(qs_area)
+        questoes_final.extend(qs_area[:10])  # 10 por área
 
-/* seção */
-.secao {
-    text-align:center;
-    color:#7f8794;
-    letter-spacing:3px;
-    font-size:13px;
-    margin-bottom:30px;
-}
+    random.shuffle(questoes_final)
 
-/* Cards */
-.card {
-    padding: 28px;
-    border-radius: 20px;
-    border: 1.5px solid;
-    margin-bottom: 18px;
-    transition: 0.3s ease;
-}
+    st.session_state.questoes_ativas = questoes_final
+    st.session_state.indice_atual = 0
+    st.session_state.respostas = {}
+    st.session_state.tela = "quiz"
 
-.card:hover {
-    transform: scale(1.02);
-}
+# ----------------------------------
+# TELA INICIAL
+# ----------------------------------
+if st.session_state.tela == "inicio":
 
-.laranja {
-    border-color:#ff7a00;
-    background: linear-gradient(145deg, rgba(255,122,0,0.07), rgba(255,122,0,0.02));
-}
+    st.title("📚 Simulado ENEM Inteligente")
 
-.verde {
-    border-color:#00e0a4;
-    background: linear-gradient(145deg, rgba(0,224,164,0.07), rgba(0,224,164,0.02));
-}
+    areas = list(set(q["area"] for q in PERGUNTAS))
+    selecionadas = st.multiselect(
+        "Selecione as áreas:",
+        areas
+    )
 
-.roxo {
-    border-color:#a855f7;
-    background: linear-gradient(145deg, rgba(168,85,247,0.07), rgba(168,85,247,0.02));
-}
+    st.session_state.areas_selecionadas = selecionadas
 
-.azul {
-    border-color:#3b82f6;
-    background: linear-gradient(145deg, rgba(59,130,246,0.07), rgba(59,130,246,0.02));
-}
+    if st.button("🚀 Iniciar Simulado"):
+        if len(selecionadas) == 0:
+            st.warning("Selecione pelo menos uma área.")
+        else:
+            iniciar_simulado()
 
-.card h3 {
-    margin-bottom:5px;
-    font-weight:600;
-}
+# ----------------------------------
+# TELA QUIZ
+# ----------------------------------
+elif st.session_state.tela == "quiz":
 
-.card p {
-    font-size:13px;
-    color:#7f8794;
-}
+    total = len(st.session_state.questoes_ativas)
+    indice = st.session_state.indice_atual
+    questao = st.session_state.questoes_ativas[indice]
 
-/* Botões secundários */
-.stButton > button {
-    background: transparent;
-    border:1px solid #ff7a00;
-    color:#ff7a00;
-    border-radius:12px;
-    padding:8px 18px;
-}
+    st.progress((indice + 1) / total)
 
-.stButton > button:hover {
-    background:#ff7a00;
-    color:white;
-}
+    st.subheader(f"Questão {indice + 1} de {total}")
+    st.markdown(f"**Área:** {questao['area']}")
+    st.markdown(questao["pergunta"])
 
-/* Botão principal */
-.botao-principal button {
-    background:#ff7a00 !important;
-    color:white !important;
-    font-weight:600;
-    border:none !important;
-    border-radius:14px !important;
-    padding:14px 35px !important;
-    box-shadow:0 0 25px rgba(255,122,0,0.5);
-    transition:0.3s;
-}
+    alternativa = st.radio(
+        "Escolha uma alternativa:",
+        questao["alternativas"],
+        key=f"radio_{indice}"
+    )
 
-.botao-principal button:hover {
-    transform: scale(1.05);
-}
+    if st.button("Salvar Resposta"):
+        st.session_state.respostas[indice] = alternativa
 
-.center {
-    display:flex;
-    justify-content:center;
-    margin-top:35px;
-}
+    col1, col2 = st.columns(2)
 
-.contador {
-    text-align:center;
-    color:#7f8794;
-    margin-top:10px;
-    font-size:13px;
-}
+    with col1:
+        if st.button("⬅️ Anterior") and indice > 0:
+            st.session_state.indice_atual -= 1
 
-</style>
-""", unsafe_allow_html=True)
+    with col2:
+        if st.button("➡️ Próxima"):
+            if indice < total - 1:
+                st.session_state.indice_atual += 1
+            else:
+                st.session_state.tela = "resultado"
 
-# -------------------------
-# HEADER
-# -------------------------
-st.markdown('<div class="topo">PREPARATÓRIO OFICIAL</div>', unsafe_allow_html=True)
-st.markdown('<div class="titulo-enem">ENEM</div>', unsafe_allow_html=True)
-st.markdown('<div class="subtitulo">Simulador</div>', unsafe_allow_html=True)
-st.markdown('<div class="descricao">40 questões · 4 áreas · Análise por competência · Shuffled</div>', unsafe_allow_html=True)
-st.markdown('<div class="secao">SELECIONE AS ÁREAS DO SIMULADO</div>', unsafe_allow_html=True)
+# ----------------------------------
+# TELA RESULTADO
+# ----------------------------------
+elif st.session_state.tela == "resultado":
 
-# -------------------------
-# CARDS
-# -------------------------
-col1, col2 = st.columns(2)
+    st.title("📊 Resultado Final")
 
-with col1:
-    st.markdown("""
-    <div class="card laranja">
-        <h3 style="color:#ff7a00;">✍ Linguagens</h3>
-        <p>10 questões</p>
-    </div>
-    """, unsafe_allow_html=True)
-    st.button("✓ LINGUAGENS")
+    acertos = 0
+    total = len(st.session_state.questoes_ativas)
+    desempenho_area = Counter()
 
-with col2:
-    st.markdown("""
-    <div class="card verde">
-        <h3 style="color:#00e0a4;">🔬 Ciências da Natureza</h3>
-        <p>10 questões</p>
-    </div>
-    """, unsafe_allow_html=True)
-    st.button("✓ CIÊNCIAS DA NATUREZA")
+    for i, questao in enumerate(st.session_state.questoes_ativas):
+        resposta_usuario = st.session_state.respostas.get(i)
+        if resposta_usuario == questao["resposta"]:
+            acertos += 1
+            desempenho_area[questao["area"]] += 1
 
-col3, col4 = st.columns(2)
+    porcentagem = (acertos / total) * 100
 
-with col3:
-    st.markdown("""
-    <div class="card roxo">
-        <h3 style="color:#a855f7;">🏛 Ciências Humanas</h3>
-        <p>10 questões</p>
-    </div>
-    """, unsafe_allow_html=True)
-    st.button("✓ CIÊNCIAS HUMANAS")
+    st.metric("Total de Acertos", f"{acertos} / {total}")
+    st.metric("Aproveitamento", f"{porcentagem:.1f}%")
 
-with col4:
-    st.markdown("""
-    <div class="card azul">
-        <h3 style="color:#3b82f6;">📐 Matemática</h3>
-        <p>10 questões</p>
-    </div>
-    """, unsafe_allow_html=True)
-    st.button("✓ MATEMÁTICA")
+    st.subheader("📈 Desempenho por Área")
+    st.bar_chart(desempenho_area)
 
-st.markdown('<div class="contador">40 questões selecionadas</div>', unsafe_allow_html=True)
-
-st.markdown('<div class="center botao-principal">', unsafe_allow_html=True)
-st.button("INICIAR SIMULADO →")
-st.markdown('</div>', unsafe_allow_html=True)
+    if st.button("🔄 Refazer Simulado"):
+        st.session_state.tela = "inicio"
