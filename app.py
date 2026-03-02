@@ -653,7 +653,7 @@ elif st.session_state.tela == "home":
     st.markdown("<br>", unsafe_allow_html=True)
     _, mid2, _ = st.columns([1, 2, 1])
     with mid2:
-        st.link_button("Redação IA", "https://simulador-redacao-enem.streamlit.app/", type="secondary", use_container_width=True)
+        st.link_button("Redação IA", "https://simulador-redacao-enem.streamlit.app/", use_container_width=True)
     
     if st.session_state.historico:
         st.markdown("<br>", unsafe_allow_html=True)
