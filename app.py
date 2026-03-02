@@ -643,11 +643,19 @@ elif st.session_state.tela == "home":
                 st.rerun()
     total_qs = sum(min(20, sum(1 for q in PERGUNTAS if q["area"] == area)) for area in st.session_state.areas_selecionadas)
     st.markdown(f"<div class='total-label'>{total_qs} questões selecionadas</div>", unsafe_allow_html=True)
+    
     _, mid, _ = st.columns([1, 2, 1])
     with mid:
         if st.button("Iniciar Simulado →", type="primary", use_container_width=True):
             iniciar_simulado()
             st.rerun()
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    _, mid2, _ = st.columns([1, 2, 1])
+    with mid2:
+        if st.button("Redação IA", type="secondary", use_container_width=True):
+            st.markdown('<meta http-equiv="refresh" content="0;url=https://simulador-redacao-enem.streamlit.app/" />', unsafe_allow_html=True)
+    
     if st.session_state.historico:
         st.markdown("<br>", unsafe_allow_html=True)
         st.markdown("<div class='section-label'>Histórico de simulados</div>", unsafe_allow_html=True)
