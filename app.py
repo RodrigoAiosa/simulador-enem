@@ -1,122 +1,106 @@
 import streamlit as st
 import json
 import random
-import pandas as pd
-import plotly.graph_objects as go
-from pathlib import Path
-from datetime import datetime
-import io
+import time
 import re
 
 from registrar_acesso import registrar_acesso
 
 
-# ── Configuração da página ─────────────────────────────
+# ═══════════════════════════════════════════════════════════════
+# CONFIGURAÇÃO
+# ═══════════════════════════════════════════════════════════════
+
 st.set_page_config(
     page_title="Simulador ENEM",
-    page_icon="🎓",
-    layout="centered",
-    initial_sidebar_state="collapsed",
+    layout="centered"
 )
 
 
-# ── Constantes ─────────────────────────────────────────
+# ═══════════════════════════════════════════════════════════════
+# CARREGAR QUESTÕES
+# ═══════════════════════════════════════════════════════════════
+
+with open("questoes.json", "r", encoding="utf-8") as f:
+    QUESTOES = json.load(f)
+
+
+# ═══════════════════════════════════════════════════════════════
+# ÁREAS
+# ═══════════════════════════════════════════════════════════════
+
 AREA_CORES = {
-    "Linguagens": "#f97316",
-    "Ciências Humanas": "#8b5cf6",
-    "Ciências da Natureza": "#10b981",
-    "Matemática": "#3b82f6",
+    "Matemática": "#ff4b4b",
+    "Linguagens": "#ffa500",
+    "Humanas": "#2ecc71",
+    "Natureza": "#3498db",
 }
 
-AREA_ICONES = {
-    "Linguagens": "✍️",
-    "Ciências Humanas": "🏛️",
-    "Ciências da Natureza": "🔬",
-    "Matemática": "📐",
-}
 
-LETRAS = ["A","B","C","D","E"]
+# ═══════════════════════════════════════════════════════════════
+# SESSION STATE
+# ═══════════════════════════════════════════════════════════════
 
-
-# ── Carregar perguntas ─────────────────────────────────
-@st.cache_data
-def carregar_perguntas():
-    caminho = Path(__file__).parent / "perguntas_400.json"
-    with open(caminho, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-PERGUNTAS = carregar_perguntas()
-
-
-# ── Estado da sessão ───────────────────────────────────
 def init_state():
 
     defaults = {
-        "tela":"form",
-        "nome_aluno":"",
-        "celular":"",
-        "email":"",
-        "idade":"",
-        "sexo":"Não informar",
+        "tela": "nome",
 
-        "areas_selecionadas":list(AREA_CORES.keys()),
+        "nome_aluno": "",
+        "celular": "",
+        "email": "",
+        "idade": "",
+        "sexo": "Não informar",
 
-        "questoes_ativas":[],
-        "indice_atual":0,
-        "respostas":{},
-        "mostrar_explicacao":False,
+        "areas_selecionadas": list(AREA_CORES.keys()),
+        "questoes_ativas": [],
+        "indice_atual": 0,
+        "respostas": {},
+        "mostrar_explicacao": False,
 
-        "tempo_inicio":None,
-        "user_agent":"",
-        "historico":[]
+        "historico": [],
+
+        "tempo_inicio": None,
+        "tempo_decorrido": 0,
+
+        "user_agent": "",
     }
 
-    for k,v in defaults.items():
+    for k, v in defaults.items():
         if k not in st.session_state:
             st.session_state[k] = v
+
 
 init_state()
 
 
-# ── Iniciar simulado ───────────────────────────────────
+# ═══════════════════════════════════════════════════════════════
+# FUNÇÕES
+# ═══════════════════════════════════════════════════════════════
+
 def iniciar_simulado():
 
-    qs=[]
+    questoes_filtradas = [
+        q for q in QUESTOES
+        if q["area"] in st.session_state.areas_selecionadas
+    ]
 
-    for area in st.session_state.areas_selecionadas:
+    random.shuffle(questoes_filtradas)
 
-        area_qs=[q for q in PERGUNTAS if q["area"]==area]
+    st.session_state.questoes_ativas = questoes_filtradas[:10]
+    st.session_state.indice_atual = 0
+    st.session_state.respostas = {}
+    st.session_state.mostrar_explicacao = False
 
-        random.shuffle(area_qs)
+    st.session_state.tempo_inicio = time.time()
 
-        qs.extend(area_qs[:20])
-
-    random.shuffle(qs)
-
-    st.session_state.questoes_ativas=qs
-    st.session_state.indice_atual=0
-    st.session_state.respostas={}
-    st.session_state.mostrar_explicacao=False
-    st.session_state.tempo_inicio=datetime.now()
-
-    st.session_state.tela="quiz"
+    st.session_state.tela = "questao"
+    st.rerun()
 
 
-# ── Finalizar simulado ─────────────────────────────────
 def finalizar():
 
-    qs=st.session_state.questoes_ativas
-    res=st.session_state.respostas
-
-    acertos=sum(
-        1 for i,q in enumerate(qs)
-        if res.get(i)==q["correta"]
-    )
-
-    total=len(qs)
-    pct=round(acertos/total*100)
-
-    duracao=int((datetime.now()-st.session_state.tempo_inicio).total_seconds())
+    duracao = int(time.time() - st.session_state.tempo_inicio)
 
     registrar_acesso(
         nome=st.session_state.nome_aluno,
@@ -124,26 +108,23 @@ def finalizar():
         email=st.session_state.email,
         idade=st.session_state.idade,
         sexo=st.session_state.sexo,
-        user_agent=st.session_state.user_agent,
+        user_agent=st.session_state.get("user_agent", ""),
         duracao_segundos=duracao
     )
 
-    st.session_state.historico.append(
-        {"acertos":acertos,"total":total,"pct":pct}
-    )
+    st.session_state.tempo_decorrido = duracao
+    st.session_state.tela = "resultado"
 
-    st.session_state.tela="resultado"
+    st.rerun()
 
 
-# ═══════════════════════════════════════════════════════
-# FORMULÁRIO
-# ═══════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════════════
+# TELA: NOME
+# ═══════════════════════════════════════════════════════════════
 
-if st.session_state.tela=="form":
+if st.session_state.tela == "nome":
 
-    st.title("🎓 Simulador ENEM")
-
-    st.subheader("Informe seus dados")
+    st.markdown("## Simulador ENEM")
 
     st.session_state.nome_aluno = st.text_input(
         "Nome",
@@ -151,154 +132,137 @@ if st.session_state.tela=="form":
     )
 
     st.session_state.celular = st.text_input(
-        "Celular",
-        help="Digite somente números"
+        "Celular (somente números)",
+        value=st.session_state.celular
     )
 
-    st.session_state.email = st.text_input("Email")
+    st.session_state.email = st.text_input(
+        "Email",
+        value=st.session_state.email
+    )
 
-    st.session_state.idade = st.text_input("Idade")
+    st.session_state.idade = st.text_input(
+        "Idade",
+        value=st.session_state.idade
+    )
 
     st.session_state.sexo = st.selectbox(
         "Sexo",
-        ["Masculino","Feminino","Não informar"]
+        ["Masculino", "Feminino", "Não informar"],
+        index=["Masculino","Feminino","Não informar"].index(st.session_state.sexo)
     )
 
+    # ═══════════════════════════════════════
+    # VALIDAÇÕES
+    # ═══════════════════════════════════════
 
-    # ── Regex validação ─────────────────────────────
+    nome_ok = len(st.session_state.nome_aluno.strip()) > 0
 
-    nome_valido = len(st.session_state.nome_aluno.strip())>0
+    celular_ok = re.fullmatch(r"\d{10,11}", st.session_state.celular)
+    email_ok = re.fullmatch(r"[^@]+@[^@]+\.[^@]+", st.session_state.email)
+    idade_ok = re.fullmatch(r"\d{1,3}", st.session_state.idade)
 
-    celular_valido = re.fullmatch(r"\d{10,11}", st.session_state.celular)
+    if st.session_state.celular and not celular_ok:
+        st.error("Celular inválido")
 
-    email_valido = re.fullmatch(
-        r"[^@]+@[^@]+\.[^@]+",
-        st.session_state.email
-    )
-
-    idade_valida = re.fullmatch(r"\d{1,3}", st.session_state.idade)
-
-
-    if st.session_state.celular and not celular_valido:
-        st.error("Celular deve conter apenas números (10 ou 11 dígitos)")
-
-    if st.session_state.email and not email_valido:
+    if st.session_state.email and not email_ok:
         st.error("Email inválido")
 
-    if st.session_state.idade and not idade_valida:
-        st.error("Idade deve conter apenas números")
-
+    if st.session_state.idade and not idade_ok:
+        st.error("Idade inválida")
 
     form_ok = all([
-        nome_valido,
-        celular_valido,
-        email_valido,
-        idade_valida
+        nome_ok,
+        celular_ok,
+        email_ok,
+        idade_ok
     ])
 
-
     if st.button(
-        "Iniciar Simulador",
-        disabled=not form_ok,
-        type="primary"
+        "Avançar",
+        disabled=not form_ok
     ):
 
-        st.session_state.user_agent = st.query_params.get("ua","")
-        st.session_state.tela="home"
+        st.session_state.tela = "home"
         st.rerun()
 
 
+# ═══════════════════════════════════════════════════════════════
+# TELA: HOME
+# ═══════════════════════════════════════════════════════════════
 
-# ═══════════════════════════════════════════════════════
-# HOME
-# ═══════════════════════════════════════════════════════
+elif st.session_state.tela == "home":
 
-elif st.session_state.tela=="home":
+    st.markdown(f"### Olá, {st.session_state.nome_aluno}")
 
-    st.title("Selecione as áreas")
+    st.write("Escolha as áreas do simulado")
+
+    selecionadas = []
 
     for area in AREA_CORES:
 
-        sel = area in st.session_state.areas_selecionadas
+        if st.checkbox(area, value=True):
+            selecionadas.append(area)
 
-        if st.checkbox(area,value=sel):
+    st.session_state.areas_selecionadas = selecionadas
 
-            if area not in st.session_state.areas_selecionadas:
-                st.session_state.areas_selecionadas.append(area)
+    if st.button("Iniciar Simulado"):
+
+        iniciar_simulado()
+
+
+# ═══════════════════════════════════════════════════════════════
+# TELA: QUESTÃO
+# ═══════════════════════════════════════════════════════════════
+
+elif st.session_state.tela == "questao":
+
+    indice = st.session_state.indice_atual
+    questao = st.session_state.questoes_ativas[indice]
+
+    st.markdown(f"### Questão {indice+1}")
+
+    st.write(questao["pergunta"])
+
+    resposta = st.radio(
+        "Escolha:",
+        questao["alternativas"],
+        key=f"q{indice}"
+    )
+
+    if st.button("Responder"):
+
+        st.session_state.respostas[indice] = resposta
+
+        if indice + 1 >= len(st.session_state.questoes_ativas):
+
+            finalizar()
 
         else:
 
-            if area in st.session_state.areas_selecionadas:
-                st.session_state.areas_selecionadas.remove(area)
+            st.session_state.indice_atual += 1
+            st.rerun()
 
 
-    if st.button("Começar Simulado"):
-        iniciar_simulado()
-        st.rerun()
+# ═══════════════════════════════════════════════════════════════
+# TELA: RESULTADO
+# ═══════════════════════════════════════════════════════════════
 
+elif st.session_state.tela == "resultado":
 
-# ═══════════════════════════════════════════════════════
-# QUIZ
-# ═══════════════════════════════════════════════════════
+    acertos = 0
 
-elif st.session_state.tela=="quiz":
+    for i, q in enumerate(st.session_state.questoes_ativas):
 
-    qs = st.session_state.questoes_ativas
-    idx = st.session_state.indice_atual
+        if st.session_state.respostas.get(i) == q["resposta"]:
+            acertos += 1
 
-    q = qs[idx]
+    st.markdown("## Resultado")
 
-    st.subheader(f"Questão {idx+1}/{len(qs)}")
+    st.write(f"Acertos: {acertos}")
+    st.write(f"Tempo: {st.session_state.tempo_decorrido} segundos")
 
-    st.write(q["enunciado"])
+    if st.button("Refazer"):
 
-
-    for i,alt in enumerate(q["alternativas"]):
-
-        if st.button(f"{LETRAS[i]}) {alt}"):
-
-            st.session_state.respostas[idx]=i
-
-            if idx < len(qs)-1:
-
-                st.session_state.indice_atual+=1
-                st.rerun()
-
-            else:
-
-                finalizar()
-                st.rerun()
-
-
-
-# ═══════════════════════════════════════════════════════
-# RESULTADO
-# ═══════════════════════════════════════════════════════
-
-elif st.session_state.tela=="resultado":
-
-    qs = st.session_state.questoes_ativas
-    res = st.session_state.respostas
-
-    acertos=sum(
-        1 for i,q in enumerate(qs)
-        if res.get(i)==q["correta"]
-    )
-
-    total=len(qs)
-
-    pct=round(acertos/total*100)
-
-    st.title("Resultado")
-
-    st.metric(
-        "Pontuação",
-        f"{pct}%"
-    )
-
-    st.write(f"{acertos} de {total} acertos")
-
-
-    if st.button("Novo Simulado"):
-        iniciar_simulado()
+        st.session_state.tela = "home"
         st.rerun()
