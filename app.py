@@ -518,7 +518,11 @@ def finalizar():
     registrar_acesso(
         nome=st.session_state.nome_aluno,
         user_agent=st.session_state.get("user_agent", ""),
-        duracao_segundos=duracao_seg
+        duracao_segundos=duracao_seg,
+        celular=st.session_state.celular_aluno,
+        email=st.session_state.email_aluno,
+        idade=st.session_state.idade_aluno,
+        sexo=st.session_state.sexo_aluno
     )
 
     st.session_state.tela = "resultado"
