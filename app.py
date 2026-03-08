@@ -6,6 +6,7 @@ import plotly.graph_objects as go
 from pathlib import Path
 from datetime import datetime
 import io
+import re
 from registrar_acesso import registrar_acesso
 
 # ── Configuração da página ──────────────────────────────────────────────────
@@ -424,6 +425,25 @@ AREA_ICONES = {
 }
 LETRAS = ["A", "B", "C", "D", "E"]
 
+# ── Funções de Validação com Regex ──────────────────────────────────────────
+def validar_celular(celular):
+    """Valida celular com 11 dígitos (0-9)"""
+    padrao = r'^\d{11}$'
+    return bool(re.match(padrao, celular))
+
+def validar_email(email):
+    """Valida email com regex"""
+    padrao = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return bool(re.match(padrao, email))
+
+def validar_idade(idade):
+    """Valida idade (número entre 1 e 120)"""
+    try:
+        idade_num = int(idade)
+        return 1 <= idade_num <= 120
+    except:
+        return False
+
 # ── Carregamento de perguntas ───────────────────────────────────────────────
 @st.cache_data
 def carregar_perguntas():
@@ -437,6 +457,10 @@ def init_state():
     defaults = {
         "tela": "nome",
         "nome_aluno": "",
+        "celular_aluno": "",
+        "email_aluno": "",
+        "idade_aluno": "",
+        "sexo_aluno": "",
         "areas_selecionadas": list(AREA_CORES.keys()),
         "questoes_ativas": [],
         "indice_atual": 0,
@@ -586,13 +610,64 @@ if st.session_state.tela == "nome":
     st.markdown("<div class='titulo-preparatorio'>Preparatório Oficial</div>", unsafe_allow_html=True)
     st.markdown("<div class='titulo-enem'>ENEM</div>", unsafe_allow_html=True)
     st.markdown("<div class='titulo-simulador'>Simulador</div>", unsafe_allow_html=True)
-    st.markdown("<div class='subtitulo'>Bem-vindo! Informe seu nome para começar.</div>", unsafe_allow_html=True)
+    st.markdown("<div class='subtitulo'>Bem-vindo! Informe seus dados para começar.</div>", unsafe_allow_html=True)
 
     st.session_state.nome_aluno = st.text_input("Seu nome:", value=st.session_state.nome_aluno)
+    
+    st.session_state.celular_aluno = st.text_input(
+        "Celular:", 
+        value=st.session_state.celular_aluno,
+        placeholder="Digite somente número neste campo",
+        help="Digite somente número neste campo"
+    )
+    
+    st.session_state.email_aluno = st.text_input(
+        "Email:", 
+        value=st.session_state.email_aluno,
+        placeholder="exemplo@gmail.com",
+        help="exemplo@gmail.com"
+    )
+    
+    st.session_state.idade_aluno = st.text_input(
+        "Idade:", 
+        value=st.session_state.idade_aluno,
+        placeholder="Digite sua idade"
+    )
+    
+    st.session_state.sexo_aluno = st.selectbox(
+        "Sexo:",
+        options=["", "Masculino", "Feminino"],
+        index=0 if st.session_state.sexo_aluno == "" else (1 if st.session_state.sexo_aluno == "Masculino" else 2),
+        format_func=lambda x: "Selecione..." if x == "" else x
+    )
+
+    # ── Validação de campos ──
+    erro_validacao = ""
+    
+    if st.session_state.nome_aluno.strip():
+        if st.session_state.celular_aluno and not validar_celular(st.session_state.celular_aluno):
+            erro_validacao = "❌ Celular deve conter 11 dígitos"
+        elif st.session_state.email_aluno and not validar_email(st.session_state.email_aluno):
+            erro_validacao = "❌ Email inválido"
+        elif st.session_state.idade_aluno and not validar_idade(st.session_state.idade_aluno):
+            erro_validacao = "❌ Idade deve ser um número entre 1 e 120"
+        elif st.session_state.sexo_aluno == "":
+            erro_validacao = "❌ Selecione um sexo"
+
+    if erro_validacao:
+        st.error(erro_validacao)
 
     _, mid, _ = st.columns([1, 2, 1])
     with mid:
-        if st.button("Avançar →", type="primary", use_container_width=True, disabled=not st.session_state.nome_aluno.strip()):
+        campos_validos = (
+            st.session_state.nome_aluno.strip() and
+            (not st.session_state.celular_aluno or validar_celular(st.session_state.celular_aluno)) and
+            (not st.session_state.email_aluno or validar_email(st.session_state.email_aluno)) and
+            (not st.session_state.idade_aluno or validar_idade(st.session_state.idade_aluno)) and
+            st.session_state.sexo_aluno != ""
+        )
+        
+        if st.button("Avançar →", type="primary", use_container_width=True, disabled=not campos_validos):
             # ── Captura User-Agent via query params (se disponível) ──
             st.session_state.user_agent = st.query_params.get("ua", "")
             st.session_state.tela = "home"
