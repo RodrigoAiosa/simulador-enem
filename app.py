@@ -467,6 +467,7 @@ def init_state():
         "respostas": {},
         "mostrar_explicacao": False,
         "historico": [],
+        "questoes_ja_vistas": set(),   # ← controle de questões já exibidas na sessão
         "tempo_inicio": None,
         "tempo_decorrido": 0,
         "user_agent": "",
@@ -480,9 +481,26 @@ init_state()
 def iniciar_simulado():
     qs = []
     for area in st.session_state.areas_selecionadas:
-        area_qs = [q for q in PERGUNTAS if q["area"] == area]
+        # Filtra apenas questões desta área ainda não vistas
+        area_qs = [
+            q for q in PERGUNTAS
+            if q["area"] == area
+            and id(q) not in st.session_state.questoes_ja_vistas
+        ]
+
+        # Se não há questões novas suficientes, reseta o histórico SOMENTE desta área
+        if len(area_qs) < 20:
+            ids_desta_area = {id(q) for q in PERGUNTAS if q["area"] == area}
+            st.session_state.questoes_ja_vistas -= ids_desta_area
+            area_qs = [q for q in PERGUNTAS if q["area"] == area]
+
         random.shuffle(area_qs)
-        qs.extend(area_qs[:20])
+        selecionadas = area_qs[:20]
+
+        # Registra as questões sorteadas como vistas
+        st.session_state.questoes_ja_vistas.update(id(q) for q in selecionadas)
+        qs.extend(selecionadas)
+
     random.shuffle(qs)
     st.session_state.questoes_ativas = qs
     st.session_state.indice_atual = 0
