@@ -1,8 +1,5 @@
-import os
-from supabase import create_client, Client
-
-# ── Credenciais via st.secrets ou variáveis de ambiente ──
 import streamlit as st
+from supabase import create_client, Client
 
 SUPABASE_URL = st.secrets["SUPABASE_URL"]
 SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
@@ -21,12 +18,10 @@ def registrar_acesso(
     try:
         data = {
             "nome_completo": nome.strip(),
-            "celular":        celular.strip(),
-            "email":          email.strip(),
-            "idade":          int(idade) if idade else None,
-            "sexo":           sexo,
-            "user_agent":     user_agent,
-            "duracao_segundos": duracao_segundos,
+            "celular":       celular.strip(),
+            "email":         email.strip(),
+            "idade":         int(idade) if idade else None,
+            "sexo":          sexo,
         }
         supabase.table("tbl_aluno_enem").insert(data).execute()
     except Exception as e:
