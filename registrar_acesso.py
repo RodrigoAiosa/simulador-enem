@@ -1,10 +1,5 @@
 import streamlit as st
-from supabase import create_client, Client
-
-SUPABASE_URL = st.secrets["SUPABASE_URL"]
-SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
-
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+from supabase import create_client
 
 def registrar_acesso(
     nome: str,
@@ -18,12 +13,18 @@ def registrar_acesso(
     total_questoes: int = 0,
     percentual: int = 0,
 ):
+    # ← cliente criado DENTRO da função, evita erro na inicialização
+    supabase = create_client(
+        st.secrets["SUPABASE_URL"],
+        st.secrets["SUPABASE_KEY"]
+    )
+
     data = {
         "nome_completo":    nome.strip(),
         "celular":          celular.strip() or None,
         "email":            email.strip() or None,
         "idade":            int(idade) if idade else None,
-        "sexo":             sexo or None,  # salva "Masculino" ou "Feminino" direto
+        "sexo":             sexo or None,
         "duracao_segundos": duracao_segundos,
         "acertos":          acertos,
         "total_questoes":   total_questoes,
@@ -33,5 +34,5 @@ def registrar_acesso(
         response = supabase.table("tbl_aluno_enem").insert(data).execute()
         return response
     except Exception as e:
-        st.warning(f"⚠️ Não foi possível salvar no banco: {e}")
+        st.warning(f"⚠️ Erro ao salvar: {e}")
         return None
