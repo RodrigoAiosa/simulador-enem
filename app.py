@@ -690,10 +690,22 @@ if st.session_state.tela == "nome":
         )
         
         if st.button("Avançar →", type="primary", use_container_width=True, disabled=not campos_validos):
-            # ── Captura User-Agent via query params (se disponível) ──
             st.session_state.user_agent = st.query_params.get("ua", "")
-            st.session_state.tela = "home"
-            st.rerun()
+            try:
+                registrar_acesso(
+                    nome=st.session_state.nome_aluno,
+                    celular=st.session_state.celular_aluno,
+                    email=st.session_state.email_aluno,
+                    idade=st.session_state.idade_aluno,
+                    sexo=st.session_state.sexo_aluno
+                )
+                st.success("✅ Acesso registrado com sucesso.")
+                import time
+                time.sleep(1.5)
+                st.session_state.tela = "home"
+                st.rerun()
+            except Exception as e:
+                st.error(f"❌ Erro ao salvar dados: {e}")
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TELA: HOME
