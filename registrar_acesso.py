@@ -15,14 +15,12 @@ def registrar_acesso(
     idade: str = "",
     sexo: str = ""
 ):
-    try:
-        data = {
-            "nome_completo": nome.strip(),
-            "celular":       celular.strip(),
-            "email":         email.strip(),
-            "idade":         int(idade) if idade else None,
-            "sexo":          sexo,
-        }
-        supabase.table("tbl_aluno_enem").insert(data).execute()
-    except Exception as e:
-        print(f"Erro ao registrar acesso: {e}")
+    data = {
+        "nome_completo": nome.strip(),
+        "celular":       celular.strip(),
+        "email":         email.strip(),
+        "idade":         int(idade) if idade else None,
+        "sexo":          sexo,
+    }
+    response = supabase.table("tbl_aluno_enem").insert(data).execute()
+    return response
