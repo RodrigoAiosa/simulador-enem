@@ -522,25 +522,30 @@ def proxima_questao():
         finalizar()
 
 def finalizar():
-    qs = st.session_state.questoes_ativas
+    qs  = st.session_state.questoes_ativas
     res = st.session_state.respostas
     acertos = sum(1 for i, q in enumerate(qs) if res.get(i) == q["correta"])
-    total = len(qs)
-    pct = round(acertos / total * 100) if total else 0
+    total   = len(qs)
+    pct     = round(acertos / total * 100) if total else 0
     st.session_state.historico.append({"acertos": acertos, "total": total, "pct": pct})
 
-    # ── Calcula duração e registra acesso completo no banco ──
-    duracao_seg = int((datetime.now() - st.session_state.tempo_inicio).total_seconds()) \
-        if st.session_state.tempo_inicio else 0
+    # ── Calcula duração ──
+    duracao_seg = int(
+        (datetime.now() - st.session_state.tempo_inicio).total_seconds()
+    ) if st.session_state.tempo_inicio else 0
 
+    # ── Salva no Supabase ──
     registrar_acesso(
-        nome=st.session_state.nome_aluno,
-        user_agent=st.session_state.get("user_agent", ""),
-        duracao_segundos=duracao_seg,
-        celular=st.session_state.celular_aluno,
-        email=st.session_state.email_aluno,
-        idade=st.session_state.idade_aluno,
-        sexo=st.session_state.sexo_aluno
+        nome             = st.session_state.nome_aluno,
+        user_agent       = st.session_state.get("user_agent", ""),
+        duracao_segundos = duracao_seg,
+        celular          = st.session_state.celular_aluno,
+        email            = st.session_state.email_aluno,
+        idade            = st.session_state.idade_aluno,
+        sexo             = st.session_state.sexo_aluno,   # "Masculino" ou "Feminino"
+        acertos          = acertos,
+        total_questoes   = total,
+        percentual       = pct,
     )
 
     st.session_state.tela = "resultado"
@@ -635,27 +640,27 @@ if st.session_state.tela == "nome":
     st.markdown("<div class='subtitulo'>Bem-vindo! Informe seus dados para começar.</div>", unsafe_allow_html=True)
 
     st.session_state.nome_aluno = st.text_input("Seu nome:", value=st.session_state.nome_aluno)
-    
+
     st.session_state.celular_aluno = st.text_input(
-        "Celular:", 
+        "Celular:",
         value=st.session_state.celular_aluno,
         placeholder="Digite somente número neste campo",
         help="Digite somente número neste campo"
     )
-    
+
     st.session_state.email_aluno = st.text_input(
-        "Email:", 
+        "Email:",
         value=st.session_state.email_aluno,
         placeholder="exemplo@gmail.com",
         help="exemplo@gmail.com"
     )
-    
+
     st.session_state.idade_aluno = st.text_input(
-        "Idade:", 
+        "Idade:",
         value=st.session_state.idade_aluno,
         placeholder="Digite sua idade"
     )
-    
+
     st.session_state.sexo_aluno = st.selectbox(
         "Sexo:",
         options=["", "Masculino", "Feminino"],
@@ -665,7 +670,7 @@ if st.session_state.tela == "nome":
 
     # ── Validação de campos ──
     erro_validacao = ""
-    
+
     if st.session_state.nome_aluno.strip():
         if st.session_state.celular_aluno and not validar_celular(st.session_state.celular_aluno):
             erro_validacao = "❌ Celular deve conter 11 dígitos"
@@ -688,7 +693,7 @@ if st.session_state.tela == "nome":
             (not st.session_state.idade_aluno or validar_idade(st.session_state.idade_aluno)) and
             st.session_state.sexo_aluno != ""
         )
-        
+
         if st.button("Avançar →", type="primary", use_container_width=True, disabled=not campos_validos):
             # ── Captura User-Agent via query params (se disponível) ──
             st.session_state.user_agent = st.query_params.get("ua", "")
@@ -740,18 +745,18 @@ elif st.session_state.tela == "home":
                 st.rerun()
     total_qs = sum(min(20, sum(1 for q in PERGUNTAS if q["area"] == area)) for area in st.session_state.areas_selecionadas)
     st.markdown(f"<div class='total-label'>{total_qs} questões selecionadas</div>", unsafe_allow_html=True)
-    
+
     _, mid, _ = st.columns([1, 2, 1])
     with mid:
         if st.button("Iniciar Simulado →", type="primary", use_container_width=True):
             iniciar_simulado()
             st.rerun()
-    
+
     st.markdown("<br>", unsafe_allow_html=True)
     _, mid2, _ = st.columns([1, 2, 1])
     with mid2:
         st.link_button("Redação IA", "https://simulador-redacao-enem.streamlit.app/", use_container_width=True)
-    
+
     if st.session_state.historico:
         st.markdown("<br>", unsafe_allow_html=True)
         st.markdown("<div class='section-label'>Histórico de simulados</div>", unsafe_allow_html=True)
