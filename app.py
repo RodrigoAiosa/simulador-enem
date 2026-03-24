@@ -679,7 +679,7 @@ if st.session_state.tela == "nome":
     if erro_validacao:
         st.error(erro_validacao)
 
-  _, mid, _ = st.columns([1, 2, 1])
+    _, mid, _ = st.columns([1, 2, 1])
     with mid:
         campos_validos = (
             st.session_state.nome_aluno.strip() and
