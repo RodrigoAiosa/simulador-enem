@@ -13,14 +13,25 @@ def registrar_acesso(
     celular: str = "",
     email: str = "",
     idade: str = "",
-    sexo: str = ""
+    sexo: str = "",
+    acertos: int = 0,
+    total_questoes: int = 0,
+    percentual: int = 0,
 ):
     data = {
-        "nome_completo": nome.strip(),
-        "celular":       celular.strip(),
-        "email":         email.strip(),
-        "idade":         int(idade) if idade else None,
-        "sexo":          sexo,
+        "nome_completo":    nome.strip(),
+        "celular":          celular.strip() or None,
+        "email":            email.strip() or None,
+        "idade":            int(idade) if idade else None,
+        "sexo":             sexo or None,  # salva "Masculino" ou "Feminino" direto
+        "duracao_segundos": duracao_segundos,
+        "acertos":          acertos,
+        "total_questoes":   total_questoes,
+        "percentual":       percentual,
     }
-    response = supabase.table("tbl_aluno_enem").insert(data).execute()
-    return response
+    try:
+        response = supabase.table("tbl_aluno_enem").insert(data).execute()
+        return response
+    except Exception as e:
+        st.warning(f"⚠️ Não foi possível salvar no banco: {e}")
+        return None
