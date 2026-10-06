@@ -9,7 +9,11 @@ import io
 import html
 import re
 import uuid
-from banco import buscar_cadastro, criar_cadastro, normalizar_email, registrar_evento
+from urllib.parse import quote
+from banco import (
+    buscar_cadastro, criar_cadastro, normalizar_email, registrar_evento,
+    registrar_clique_link, marcar_conversao, contar_indicados, montar_link_convite,
+)
 
 # ── Configuração da página ──────────────────────────────────────────────────
 st.set_page_config(
@@ -462,6 +466,10 @@ def init_state():
         "cadastro_id": None,
         "sessao_id": str(uuid.uuid4()),
         "acesso_registrado": False,
+        "ref": None,                 # visita por link de convite, se houver
+        "codigo_indicacao": "",      # código do link de convite deste aluno
+        "total_indicados": None,
+        "cadastro_novo": False,
         "nome_aluno": "",
         "celular_aluno": "",
         "email_aluno": "",
@@ -501,11 +509,17 @@ def aplicar_cadastro(cad):
     st.session_state.celular_aluno = cad.get("celular") or ""
     st.session_state.idade_aluno   = str(cad["idade"]) if cad.get("idade") is not None else ""
     st.session_state.sexo_aluno    = cad.get("sexo") or ""
+    st.session_state.codigo_indicacao = cad.get("codigo_indicacao") or ""
+    st.session_state.total_indicados  = None
 
 # Primeira carga da sessão: registra a chegada à ferramenta
 if not st.session_state.acesso_registrado:
     st.session_state.acesso_registrado = True
-    evento("acesso")
+    # Chegou por um link de convite (?ref=CODIGO)? Registra a visita.
+    codigo_ref = st.query_params.get("ref")
+    if codigo_ref:
+        st.session_state.ref = registrar_clique_link(codigo_ref, st.session_state.sessao_id)
+    evento("acesso", detalhes={"ref": codigo_ref} if codigo_ref else None)
 
 # ── Helpers ─────────────────────────────────────────────────────────────────
 def iniciar_simulado():
@@ -766,6 +780,7 @@ elif st.session_state.tela == "cadastro":
         )
 
         if st.button("Cadastrar e começar →", type="primary", use_container_width=True, disabled=not campos_validos):
+            ref = st.session_state.ref
             try:
                 cad = criar_cadastro(
                     nome    = st.session_state.nome_aluno,
@@ -773,12 +788,18 @@ elif st.session_state.tela == "cadastro":
                     celular = st.session_state.celular_aluno,
                     idade   = st.session_state.idade_aluno,
                     sexo    = st.session_state.sexo_aluno,
+                    indicado_por = ref["origem_id"] if ref else None,
                 )
             except Exception:
                 st.error("⚠️ Não foi possível concluir o cadastro agora. Tente novamente em instantes.")
                 st.stop()
             aplicar_cadastro(cad)
-            evento("cadastro")
+            # Só conta como indicação se o cadastro foi mesmo criado por este link
+            indicado = bool(ref) and cad.get("indicado_por") == ref["origem_id"]
+            if indicado:
+                marcar_conversao(ref["compartilhamento_id"], cad["id"])
+            evento("cadastro", detalhes={"ref": ref["codigo"]} if indicado else None)
+            st.session_state.cadastro_novo = True
             st.session_state.tela = "home"
             st.rerun()
 
@@ -845,10 +866,31 @@ elif st.session_state.tela == "home":
     with mid2:
         st.link_button("Redação IA", "https://simulador-redacao-enem.streamlit.app/", use_container_width=True)
 
+    # ── Link de convite ──
+    if st.session_state.codigo_indicacao:
+        link_convite = montar_link_convite(st.session_state.codigo_indicacao)
+        if st.session_state.total_indicados is None:
+            st.session_state.total_indicados = contar_indicados(st.session_state.cadastro_id)
+        n_ind = st.session_state.total_indicados
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("<div class='section-label'>Convide seus amigos</div>", unsafe_allow_html=True)
+        if st.session_state.cadastro_novo:
+            st.success("✅ Cadastro concluído! Este é o seu link para compartilhar o simulador:")
+        st.code(link_convite, language=None)
+        if n_ind:
+            txt_ind = "1 amigo já se cadastrou" if n_ind == 1 else f"{n_ind} amigos já se cadastraram"
+            st.markdown(f"<div class='total-label'>{txt_ind} pelo seu link</div>", unsafe_allow_html=True)
+        _, mid_c, _ = st.columns([1, 2, 1])
+        with mid_c:
+            msg_convite = f"Estou treinando para o ENEM com este simulador gratuito. Faça o seu também: {link_convite}"
+            st.link_button("Compartilhar no WhatsApp", f"https://wa.me/?text={quote(msg_convite)}", use_container_width=True)
+
     _, mid3, _ = st.columns([1, 2, 1])
     with mid3:
         if st.button("Sair", use_container_width=True):
             evento("logout")
+            st.query_params.clear()
             st.session_state.clear()
             st.rerun()
 
