@@ -424,6 +424,7 @@ AREA_ICONES = {
     "Matemática": "📐",
 }
 LETRAS = ["A", "B", "C", "D", "E"]
+QUESTOES_POR_AREA = 20
 
 # ── Funções de Validação com Regex ──────────────────────────────────────────
 def validar_celular(celular):
@@ -481,24 +482,26 @@ init_state()
 def iniciar_simulado():
     qs = []
     for area in st.session_state.areas_selecionadas:
-        # Filtra apenas questões desta área ainda não vistas
-        area_qs = [
-            q for q in PERGUNTAS
-            if q["area"] == area
-            and id(q) not in st.session_state.questoes_ja_vistas
-        ]
+        vistas = st.session_state.questoes_ja_vistas
+        todas = [q for q in PERGUNTAS if q["area"] == area]
+        qtd = min(QUESTOES_POR_AREA, len(todas))
 
-        # Se não há questões novas suficientes, reseta o histórico SOMENTE desta área
-        if len(area_qs) < 20:
-            ids_desta_area = {id(q) for q in PERGUNTAS if q["area"] == area}
-            st.session_state.questoes_ja_vistas -= ids_desta_area
-            area_qs = [q for q in PERGUNTAS if q["area"] == area]
+        # Prioriza as questões desta área ainda não vistas na sessão
+        novas = [q for q in todas if q["id"] not in vistas]
+        random.shuffle(novas)
+        selecionadas = novas[:qtd]
 
-        random.shuffle(area_qs)
-        selecionadas = area_qs[:20]
+        # Se as novas acabaram, reinicia o ciclo SOMENTE desta área e
+        # completa com questões antigas, sem repetir nenhuma no mesmo simulado
+        if len(selecionadas) < qtd:
+            ids_sel = {q["id"] for q in selecionadas}
+            antigas = [q for q in todas if q["id"] not in ids_sel]
+            random.shuffle(antigas)
+            selecionadas += antigas[:qtd - len(selecionadas)]
+            vistas -= {q["id"] for q in todas}
 
         # Registra as questões sorteadas como vistas
-        st.session_state.questoes_ja_vistas.update(id(q) for q in selecionadas)
+        vistas.update(q["id"] for q in selecionadas)
         qs.extend(selecionadas)
 
     random.shuffle(qs)
@@ -743,7 +746,7 @@ elif st.session_state.tela == "home":
                 elif not sel:
                     st.session_state.areas_selecionadas.append(area)
                 st.rerun()
-    total_qs = sum(min(20, sum(1 for q in PERGUNTAS if q["area"] == area)) for area in st.session_state.areas_selecionadas)
+    total_qs = sum(min(QUESTOES_POR_AREA, sum(1 for q in PERGUNTAS if q["area"] == area)) for area in st.session_state.areas_selecionadas)
     st.markdown(f"<div class='total-label'>{total_qs} questões selecionadas</div>", unsafe_allow_html=True)
 
     _, mid, _ = st.columns([1, 2, 1])
