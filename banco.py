@@ -3,10 +3,12 @@
 Tabelas usadas (projeto BD_SIMULADOR_ENEM):
 - tbl_cadastro           -> um registro por aluno; o e-mail identifica o aluno
 - tbl_telemetria_acesso  -> um registro por evento de acesso
+- tbl_compartilhamento   -> um registro por visita feita por link de convite
 """
 import ipaddress
 import logging
 import re
+from datetime import datetime, timezone
 
 import streamlit as st
 from supabase import create_client
@@ -15,6 +17,9 @@ log = logging.getLogger(__name__)
 
 TBL_CADASTRO = "tbl_cadastro"
 TBL_TELEMETRIA = "tbl_telemetria_acesso"
+TBL_COMPARTILHAMENTO = "tbl_compartilhamento"
+
+URL_APP_PADRAO = "https://enem-simulador.streamlit.app"
 
 
 @st.cache_resource
@@ -40,14 +45,19 @@ def buscar_cadastro(email: str):
     return resp.data[0] if resp.data else None
 
 
-def criar_cadastro(nome: str, email: str, celular: str = "", idade: str = "", sexo: str = ""):
-    """Cria o cadastro e o retorna. Se o e-mail já existir, retorna o existente."""
+def criar_cadastro(nome: str, email: str, celular: str = "", idade: str = "", sexo: str = "",
+                   indicado_por=None):
+    """Cria o cadastro e o retorna. Se o e-mail já existir, retorna o existente.
+
+    indicado_por: id do aluno dono do link de convite usado, se houver.
+    """
     dados = {
         "nome_completo": nome.strip(),
         "email": normalizar_email(email),
         "celular": celular.strip() or None,
         "idade": int(idade) if str(idade).strip() else None,
         "sexo": sexo or None,
+        "indicado_por": indicado_por,
     }
     try:
         resp = _cliente().table(TBL_CADASTRO).insert(dados).execute()
@@ -58,6 +68,85 @@ def criar_cadastro(nome: str, email: str, celular: str = "", idade: str = "", se
         if existente:
             return existente
         raise
+
+
+# ── Link de convite (compartilhamento) ──────────────────────────────────────
+def normalizar_codigo(codigo):
+    """Devolve o código do link em maiúsculas, ou None se não tiver formato válido."""
+    codigo = (codigo or "").strip().upper()
+    return codigo if re.fullmatch(r"[A-Z0-9]{4,16}", codigo) else None
+
+
+def montar_link_convite(codigo: str) -> str:
+    try:
+        base = st.secrets.get("APP_URL", URL_APP_PADRAO)
+    except Exception:
+        base = URL_APP_PADRAO
+    return f"{base.rstrip('/')}/?ref={codigo}"
+
+
+def registrar_clique_link(codigo, sessao_id=None):
+    """Registra a visita feita por um link de convite.
+
+    Retorna {"compartilhamento_id", "origem_id", "codigo"} ou None se o código
+    não existir. Nunca interrompe o app se falhar.
+    """
+    codigo = normalizar_codigo(codigo)
+    if not codigo:
+        return None
+    try:
+        dono = (
+            _cliente().table(TBL_CADASTRO).select("id")
+            .eq("codigo_indicacao", codigo).limit(1).execute()
+        ).data
+        if not dono:
+            return None
+        ctx = contexto_acesso()
+        resp = _cliente().table(TBL_COMPARTILHAMENTO).insert({
+            "codigo_indicacao": codigo,
+            "cadastro_origem_id": dono[0]["id"],
+            "sessao_id": sessao_id,
+            "ip": ctx["ip"],
+            "user_agent": ctx["user_agent"],
+            "dispositivo": ctx["dispositivo"],
+            "sistema_operacional": ctx["sistema_operacional"],
+            "navegador": ctx["navegador"],
+            "origem_referrer": ctx["origem_referrer"],
+        }).execute()
+        return {
+            "compartilhamento_id": resp.data[0]["id"],
+            "origem_id": dono[0]["id"],
+            "codigo": codigo,
+        }
+    except Exception as e:
+        log.warning("Falha ao registrar visita pelo link %s: %s", codigo, e)
+        return None
+
+
+def marcar_conversao(compartilhamento_id, cadastro_indicado_id):
+    """Liga a visita pelo link ao cadastro que ela gerou."""
+    try:
+        _cliente().table(TBL_COMPARTILHAMENTO).update({
+            "cadastro_indicado_id": cadastro_indicado_id,
+            "data_hora_cadastro_indicado": datetime.now(timezone.utc).isoformat(),
+        }).eq("id", compartilhamento_id).execute()
+        return True
+    except Exception as e:
+        log.warning("Falha ao marcar conversão do link: %s", e)
+        return False
+
+
+def contar_indicados(cadastro_id) -> int:
+    """Quantos alunos se cadastraram pelo link deste aluno."""
+    try:
+        resp = (
+            _cliente().table(TBL_CADASTRO).select("id", count="exact")
+            .eq("indicado_por", cadastro_id).execute()
+        )
+        return resp.count or 0
+    except Exception as e:
+        log.warning("Falha ao contar indicados: %s", e)
+        return 0
 
 
 # ── Contexto do acesso (dispositivo, IP, navegador...) ──────────────────────
