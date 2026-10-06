@@ -6,8 +6,10 @@ import plotly.graph_objects as go
 from pathlib import Path
 from datetime import datetime
 import io
+import html
 import re
-from registrar_acesso import registrar_acesso
+import uuid
+from banco import buscar_cadastro, criar_cadastro, normalizar_email, registrar_evento
 
 # ── Configuração da página ──────────────────────────────────────────────────
 st.set_page_config(
@@ -456,7 +458,10 @@ PERGUNTAS = carregar_perguntas()
 # ── Estado ──────────────────────────────────────────────────────────────────
 def init_state():
     defaults = {
-        "tela": "nome",
+        "tela": "email",
+        "cadastro_id": None,
+        "sessao_id": str(uuid.uuid4()),
+        "acesso_registrado": False,
         "nome_aluno": "",
         "celular_aluno": "",
         "email_aluno": "",
@@ -471,12 +476,36 @@ def init_state():
         "questoes_ja_vistas": set(),   # ← controle de questões já exibidas na sessão
         "tempo_inicio": None,
         "tempo_decorrido": 0,
-        "user_agent": "",
     }
     for k, v in defaults.items():
         if k not in st.session_state:
             st.session_state[k] = v
 init_state()
+
+# ── Cadastro e telemetria ───────────────────────────────────────────────────
+def evento(tipo, **kwargs):
+    """Grava um evento de telemetria com os dados do aluno desta sessão."""
+    registrar_evento(
+        tipo,
+        cadastro_id=st.session_state.cadastro_id,
+        email=st.session_state.email_aluno,
+        sessao_id=st.session_state.sessao_id,
+        **kwargs,
+    )
+
+def aplicar_cadastro(cad):
+    """Carrega na sessão os dados de um cadastro vindo do banco."""
+    st.session_state.cadastro_id   = cad["id"]
+    st.session_state.nome_aluno    = cad.get("nome_completo") or ""
+    st.session_state.email_aluno   = cad.get("email") or ""
+    st.session_state.celular_aluno = cad.get("celular") or ""
+    st.session_state.idade_aluno   = str(cad["idade"]) if cad.get("idade") is not None else ""
+    st.session_state.sexo_aluno    = cad.get("sexo") or ""
+
+# Primeira carga da sessão: registra a chegada à ferramenta
+if not st.session_state.acesso_registrado:
+    st.session_state.acesso_registrado = True
+    evento("acesso")
 
 # ── Helpers ─────────────────────────────────────────────────────────────────
 def iniciar_simulado():
@@ -512,6 +541,10 @@ def iniciar_simulado():
     st.session_state.tempo_inicio = datetime.now()
     st.session_state.tempo_decorrido = 0
     st.session_state.tela = "quiz"
+    evento("inicio_simulado", detalhes={
+        "areas": list(st.session_state.areas_selecionadas),
+        "total_questoes": len(qs),
+    })
 
 def responder(idx_alternativa):
     st.session_state.respostas[st.session_state.indice_atual] = idx_alternativa
@@ -537,19 +570,13 @@ def finalizar():
         (datetime.now() - st.session_state.tempo_inicio).total_seconds()
     ) if st.session_state.tempo_inicio else 0
 
-    # ── Salva no Supabase ──
-    registrar_acesso(
-        nome             = st.session_state.nome_aluno,
-        user_agent       = st.session_state.get("user_agent", ""),
-        duracao_segundos = duracao_seg,
-        celular          = st.session_state.celular_aluno,
-        email            = st.session_state.email_aluno,
-        idade            = st.session_state.idade_aluno,
-        sexo             = st.session_state.sexo_aluno,   # "Masculino" ou "Feminino"
-        acertos          = acertos,
-        total_questoes   = total,
-        percentual       = pct,
-    )
+    # ── Salva o resultado na telemetria ──
+    evento("fim_simulado", duracao_segundos=duracao_seg, detalhes={
+        "acertos": acertos,
+        "total_questoes": total,
+        "percentual": pct,
+        "por_area": calcular_por_area(),
+    })
 
     st.session_state.tela = "resultado"
 
@@ -634,13 +661,58 @@ def gerar_relatorio_excel():
     return output.getvalue()
 
 # ══════════════════════════════════════════════════════════════════════════════
-# TELA: NOME
+# TELA: E-MAIL (entrada)
 # ══════════════════════════════════════════════════════════════════════════════
-if st.session_state.tela == "nome":
+if st.session_state.tela == "email":
     st.markdown("<div class='titulo-preparatorio'>Preparatório Oficial</div>", unsafe_allow_html=True)
     st.markdown("<div class='titulo-enem'>ENEM</div>", unsafe_allow_html=True)
     st.markdown("<div class='titulo-simulador'>Simulador</div>", unsafe_allow_html=True)
-    st.markdown("<div class='subtitulo'>Bem-vindo! Informe seus dados para começar.</div>", unsafe_allow_html=True)
+    st.markdown("<div class='subtitulo'>Informe seu e-mail para entrar. No primeiro acesso, você fará um cadastro rápido.</div>", unsafe_allow_html=True)
+
+    email_digitado = st.text_input(
+        "Email:",
+        value=st.session_state.email_aluno,
+        placeholder="exemplo@gmail.com",
+    )
+
+    _, mid, _ = st.columns([1, 2, 1])
+    with mid:
+        entrar = st.button("Entrar →", type="primary", use_container_width=True)
+
+    if entrar:
+        email = normalizar_email(email_digitado)
+        if not validar_email(email):
+            st.error("❌ Email inválido")
+        else:
+            try:
+                cad = buscar_cadastro(email)
+            except Exception:
+                st.error("⚠️ Não foi possível consultar o cadastro agora. Tente novamente em instantes.")
+                st.stop()
+            st.session_state.email_aluno = email
+            if cad and not cad.get("ativo", True):
+                evento("login_falhou", sucesso=False, detalhes={"motivo": "cadastro_inativo"})
+                st.error("❌ Este cadastro está desativado.")
+            elif cad:
+                aplicar_cadastro(cad)
+                evento("login")
+                st.session_state.tela = "home"
+                st.rerun()
+            else:
+                evento("login_falhou", sucesso=False, detalhes={"motivo": "email_nao_cadastrado"})
+                st.session_state.tela = "cadastro"
+                st.rerun()
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TELA: CADASTRO (primeiro acesso)
+# ══════════════════════════════════════════════════════════════════════════════
+elif st.session_state.tela == "cadastro":
+    st.markdown("<div class='titulo-preparatorio'>Preparatório Oficial</div>", unsafe_allow_html=True)
+    st.markdown("<div class='titulo-enem'>ENEM</div>", unsafe_allow_html=True)
+    st.markdown("<div class='titulo-simulador'>Simulador</div>", unsafe_allow_html=True)
+    st.markdown("<div class='subtitulo'>Primeiro acesso! Complete seu cadastro. Nas próximas vezes, basta informar o e-mail.</div>", unsafe_allow_html=True)
+
+    st.text_input("Email:", value=st.session_state.email_aluno, disabled=True)
 
     st.session_state.nome_aluno = st.text_input("Seu nome:", value=st.session_state.nome_aluno)
 
@@ -649,13 +721,6 @@ if st.session_state.tela == "nome":
         value=st.session_state.celular_aluno,
         placeholder="Digite somente número neste campo",
         help="Digite somente número neste campo"
-    )
-
-    st.session_state.email_aluno = st.text_input(
-        "Email:",
-        value=st.session_state.email_aluno,
-        placeholder="exemplo@gmail.com",
-        help="exemplo@gmail.com"
     )
 
     st.session_state.idade_aluno = st.text_input(
@@ -677,8 +742,6 @@ if st.session_state.tela == "nome":
     if st.session_state.nome_aluno.strip():
         if st.session_state.celular_aluno and not validar_celular(st.session_state.celular_aluno):
             erro_validacao = "❌ Celular deve conter 11 dígitos"
-        elif st.session_state.email_aluno and not validar_email(st.session_state.email_aluno):
-            erro_validacao = "❌ Email inválido"
         elif st.session_state.idade_aluno and not validar_idade(st.session_state.idade_aluno):
             erro_validacao = "❌ Idade deve ser um número entre 1 e 120"
         elif st.session_state.sexo_aluno == "":
@@ -687,20 +750,40 @@ if st.session_state.tela == "nome":
     if erro_validacao:
         st.error(erro_validacao)
 
+    st.caption(
+        "Ao se cadastrar, seus dados e informações de acesso (data e hora, dispositivo e IP) "
+        "são registrados para identificar você nos próximos acessos e melhorar a ferramenta."
+    )
+
     _, mid, _ = st.columns([1, 2, 1])
     with mid:
-        campos_validos = (
+        campos_validos = bool(
             st.session_state.nome_aluno.strip() and
+            validar_email(st.session_state.email_aluno) and
             (not st.session_state.celular_aluno or validar_celular(st.session_state.celular_aluno)) and
-            (not st.session_state.email_aluno or validar_email(st.session_state.email_aluno)) and
             (not st.session_state.idade_aluno or validar_idade(st.session_state.idade_aluno)) and
             st.session_state.sexo_aluno != ""
         )
 
-        if st.button("Avançar →", type="primary", use_container_width=True, disabled=not campos_validos):
-            # ── Captura User-Agent via query params (se disponível) ──
-            st.session_state.user_agent = st.query_params.get("ua", "")
+        if st.button("Cadastrar e começar →", type="primary", use_container_width=True, disabled=not campos_validos):
+            try:
+                cad = criar_cadastro(
+                    nome    = st.session_state.nome_aluno,
+                    email   = st.session_state.email_aluno,
+                    celular = st.session_state.celular_aluno,
+                    idade   = st.session_state.idade_aluno,
+                    sexo    = st.session_state.sexo_aluno,
+                )
+            except Exception:
+                st.error("⚠️ Não foi possível concluir o cadastro agora. Tente novamente em instantes.")
+                st.stop()
+            aplicar_cadastro(cad)
+            evento("cadastro")
             st.session_state.tela = "home"
+            st.rerun()
+
+        if st.button("← Usar outro e-mail", use_container_width=True):
+            st.session_state.tela = "email"
             st.rerun()
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -714,6 +797,8 @@ elif st.session_state.tela == "home":
         "<div class='subtitulo'>20 questões por área · Análise por competência · Shuffled</div>",
         unsafe_allow_html=True,
     )
+    primeiro_nome = (st.session_state.nome_aluno.split() or [""])[0]
+    st.markdown(f"<div class='total-label'>Olá, {html.escape(primeiro_nome)}!</div>", unsafe_allow_html=True)
     st.markdown("<div class='section-label'>Selecione as áreas do simulado</div>", unsafe_allow_html=True)
     col1, col2 = st.columns(2)
     for i, (area, cor) in enumerate(AREA_CORES.items()):
@@ -759,6 +844,13 @@ elif st.session_state.tela == "home":
     _, mid2, _ = st.columns([1, 2, 1])
     with mid2:
         st.link_button("Redação IA", "https://simulador-redacao-enem.streamlit.app/", use_container_width=True)
+
+    _, mid3, _ = st.columns([1, 2, 1])
+    with mid3:
+        if st.button("Sair", use_container_width=True):
+            evento("logout")
+            st.session_state.clear()
+            st.rerun()
 
     if st.session_state.historico:
         st.markdown("<br>", unsafe_allow_html=True)
