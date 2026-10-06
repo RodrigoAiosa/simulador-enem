@@ -749,12 +749,7 @@ elif st.session_state.tela == "cadastro":
 
     if erro_validacao:
         st.error(erro_validacao)
-
-    st.caption(
-        "Ao se cadastrar, seus dados e informações de acesso (data e hora, dispositivo e IP) "
-        "são registrados para identificar você nos próximos acessos e melhorar a ferramenta."
-    )
-
+        
     _, mid, _ = st.columns([1, 2, 1])
     with mid:
         campos_validos = bool(
