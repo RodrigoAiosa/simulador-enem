@@ -14,6 +14,7 @@ from banco import (
     buscar_cadastro, criar_cadastro, normalizar_email, registrar_evento,
     registrar_clique_link, marcar_conversao, contar_indicados, montar_link_convite,
 )
+from esconder_selo import esconder_selo_streamlit
 
 # ── Configuração da página ──────────────────────────────────────────────────
 st.set_page_config(
@@ -22,6 +23,7 @@ st.set_page_config(
     layout="centered",
     initial_sidebar_state="collapsed",
 )
+esconder_selo_streamlit()  # oculta os controles do Streamlit Cloud
 
 # ── CSS ─────────────────────────────────────────────────────────────────────
 st.markdown("""
