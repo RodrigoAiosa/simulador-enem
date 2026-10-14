@@ -1,0 +1,9 @@
+# O app Streamlit (Python) não roda na Vercel; lá publicamos só o index.html,
+# o banco de questões e a função api/aluno.js.
+# .streamlit/ tem segredos e NUNCA deve ser publicado.
+.streamlit/
+app.py
+banco.py
+esconder_selo.py
+requirements.txt
+perguntas.json

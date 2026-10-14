@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": "",
+  "installCommand": "",
+  "regions": ["gru1"],
+  "functions": {
+    "api/aluno.js": { "maxDuration": 15 }
+  }
+}
