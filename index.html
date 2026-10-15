@@ -500,7 +500,7 @@ footer a { color: var(--muted-2); }
   // Relatório em Excel (3 abas, como no app original)
   let xlsxCarregando = null;
   const carregarXlsx = () => window.XLSX ? Promise.resolve() : (xlsxCarregando ||= new Promise((ok, erro) => {
-    const s = Object.assign(document.createElement("script"), { src: "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js", onload: ok, onerror: () => { xlsxCarregando = null; erro(); } });
+    const s = Object.assign(document.createElement("script"), { src: "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js", onload: ok, onerror: () => { xlsxCarregando = null; erro(); } });
     document.head.appendChild(s);
   }));
   $("btnExcel").onclick = async () => {
