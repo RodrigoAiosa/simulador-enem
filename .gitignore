@@ -1,0 +1,12 @@
+# Segredos: nunca versionar. Em produção ficam nas variáveis de ambiente da Vercel.
+.env
+.env.*
+.vercel/
+.streamlit/secrets.toml
+
+# Sistema / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+node_modules/
